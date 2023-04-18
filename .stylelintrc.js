@@ -1,13 +1,13 @@
 module.exports = {
-  extends: [
-    'stylelint-config-standard',
-    'stylelint-config-prettier'
-    // "stylelint-config-css-modules",
-    // "stylelint-config-recess-order" // 配置stylelint css属性书写顺序插件,
-  ],
-  plugins: ['stylelint-order'],
-  rules: {
-    /**
+    extends: [
+        'stylelint-config-standard',
+        'stylelint-config-prettier'
+        // "stylelint-config-css-modules",
+        // "stylelint-config-recess-order" // 配置stylelint css属性书写顺序插件,
+    ],
+    plugins: ['stylelint-order'],
+    rules: {
+        /**
      * indentation: null, // 指定缩进空格
       "no-descending-specificity": null, // 禁止在具有较高优先级的选择器后出现被其覆盖的较低优先级的选择器
       "function-url-quotes": "always", // 要求或禁止 URL 的引号 "always(必须加上引号)"|"never(没有引号)"
@@ -32,112 +32,118 @@ module.exports = {
       ]
     }
      */
-    'selector-class-pattern': [
-      // 命名规范 -
-      '^([a-z][a-z0-9]*)(-[a-z0-9]+)*$',
-      {
-        message: 'Expected class selector to be kebab-case'
-      }
-    ],
-    'string-quotes': 'double', // 单引号
-    'at-rule-empty-line-before': null,
-    'at-rule-no-unknown': null,
-    'at-rule-name-case': 'lower', // 指定@规则名的大小写
-    'length-zero-no-unit': true, // 禁止零长度的单位（可自动修复）
-    'shorthand-property-no-redundant-values': true, // 简写属性
-    'number-leading-zero': 'always', // 小数不带0
-    'declaration-block-no-duplicate-properties': true, // 禁止声明快重复属性
-    'no-descending-specificity': true, // 禁止在具有较高优先级的选择器后出现被其覆盖的较低优先级的选择器。
-    'selector-max-id': null, // 限制一个选择器中 ID 选择器的数量
-    'max-nesting-depth': 10,
-    'declaration-block-single-line-max-declarations': 1,
-    'block-opening-brace-space-before': 'always',
-    // 'selector-max-type': [0, { ignore: ['child', 'descendant', 'compounded'] }],
-    indentation: [
-      2,
-      {
-        // 指定缩进  warning 提醒
-        severity: 'warning'
-      }
-    ],
-    'order/order': ['custom-properties', 'dollar-variables', 'declarations', 'rules', 'at-rules'],
-    'order/properties-order': [
-      // 规则顺序
-      'position',
-      'top',
-      'right',
-      'bottom',
-      'left',
-      'z-index',
-      'display',
-      'float',
-      'width',
-      'height',
-      'max-width',
-      'max-height',
-      'min-width',
-      'min-height',
-      'padding',
-      'padding-top',
-      'padding-right',
-      'padding-bottom',
-      'padding-left',
-      'margin',
-      'margin-top',
-      'margin-right',
-      'margin-bottom',
-      'margin-left',
-      'margin-collapse',
-      'margin-top-collapse',
-      'margin-right-collapse',
-      'margin-bottom-collapse',
-      'margin-left-collapse',
-      'overflow',
-      'overflow-x',
-      'overflow-y',
-      'clip',
-      'clear',
-      'font',
-      'font-family',
-      'font-size',
-      'font-smoothing',
-      'osx-font-smoothing',
-      'font-style',
-      'font-weight',
-      'line-height',
-      'letter-spacing',
-      'word-spacing',
-      'color',
-      'text-align',
-      'text-decoration',
-      'text-indent',
-      'text-overflow',
-      'text-rendering',
-      'text-size-adjust',
-      'text-shadow',
-      'text-transform',
-      'word-break',
-      'word-wrap',
-      'white-space',
-      'vertical-align',
-      'list-style',
-      'list-style-type',
-      'list-style-position',
-      'list-style-image',
-      'pointer-events',
-      'cursor',
-      'background',
-      'background-color',
-      'border',
-      'border-radius',
-      'content',
-      'outline',
-      'outline-offset',
-      'opacity',
-      'filter',
-      'visibility',
-      'size',
-      'transform'
-    ]
-  }
-}
+        'selector-class-pattern': [
+            // 命名规范 -
+            '^([a-z][a-z0-9]*)(-[a-z0-9]+)*$',
+            {
+                message: 'Expected class selector to be kebab-case'
+            }
+        ],
+        'string-quotes': 'double', // 单引号
+        'at-rule-empty-line-before': null,
+        'at-rule-no-unknown': null,
+        'at-rule-name-case': 'lower', // 指定@规则名的大小写
+        'length-zero-no-unit': true, // 禁止零长度的单位（可自动修复）
+        'shorthand-property-no-redundant-values': true, // 简写属性
+        'number-leading-zero': 'always', // 小数不带0
+        'declaration-block-no-duplicate-properties': true, // 禁止声明快重复属性
+        'no-descending-specificity': true, // 禁止在具有较高优先级的选择器后出现被其覆盖的较低优先级的选择器。
+        'selector-max-id': null, // 限制一个选择器中 ID 选择器的数量
+        'max-nesting-depth': 10,
+        'declaration-block-single-line-max-declarations': 1,
+        'block-opening-brace-space-before': 'always',
+        // 'selector-max-type': [0, { ignore: ['child', 'descendant', 'compounded'] }],
+        indentation: [
+            4,
+            {
+                // 指定缩进  warning 提醒
+                severity: 'warning'
+            }
+        ],
+        'order/order': [
+            'custom-properties',
+            'dollar-variables',
+            'declarations',
+            'rules',
+            'at-rules'
+        ],
+        'order/properties-order': [
+            // 规则顺序
+            'position',
+            'top',
+            'right',
+            'bottom',
+            'left',
+            'z-index',
+            'display',
+            'float',
+            'width',
+            'height',
+            'max-width',
+            'max-height',
+            'min-width',
+            'min-height',
+            'padding',
+            'padding-top',
+            'padding-right',
+            'padding-bottom',
+            'padding-left',
+            'margin',
+            'margin-top',
+            'margin-right',
+            'margin-bottom',
+            'margin-left',
+            'margin-collapse',
+            'margin-top-collapse',
+            'margin-right-collapse',
+            'margin-bottom-collapse',
+            'margin-left-collapse',
+            'overflow',
+            'overflow-x',
+            'overflow-y',
+            'clip',
+            'clear',
+            'font',
+            'font-family',
+            'font-size',
+            'font-smoothing',
+            'osx-font-smoothing',
+            'font-style',
+            'font-weight',
+            'line-height',
+            'letter-spacing',
+            'word-spacing',
+            'color',
+            'text-align',
+            'text-decoration',
+            'text-indent',
+            'text-overflow',
+            'text-rendering',
+            'text-size-adjust',
+            'text-shadow',
+            'text-transform',
+            'word-break',
+            'word-wrap',
+            'white-space',
+            'vertical-align',
+            'list-style',
+            'list-style-type',
+            'list-style-position',
+            'list-style-image',
+            'pointer-events',
+            'cursor',
+            'background',
+            'background-color',
+            'border',
+            'border-radius',
+            'content',
+            'outline',
+            'outline-offset',
+            'opacity',
+            'filter',
+            'visibility',
+            'size',
+            'transform'
+        ]
+    }
+};

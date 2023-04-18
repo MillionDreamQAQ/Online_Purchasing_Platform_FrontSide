@@ -1,29 +1,26 @@
-import { Configuration, DefinePlugin } from 'webpack'
-import HtmlWebpackPlugin from 'html-webpack-plugin'
-import WebpackBar from 'webpackbar'
-import * as dotenv from 'dotenv'
-import { isDev } from './constants'
+import { Configuration, DefinePlugin } from 'webpack';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import WebpackBar from 'webpackbar';
+import * as dotenv from 'dotenv';
+import { isDev } from './constants';
 
-const path = require('path')
-const MiniCssExtractPlugin = require('mini-css-extract-plugin')
-
-console.log('NODE_ENV', process.env.NODE_ENV)
-console.log('BASE_ENV', process.env.BASE_ENV)
+const path = require('path');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 // 加载配置文件
 const envConfig = dotenv.config({
-  path: path.resolve(__dirname, '../env/.env.' + process.env.BASE_ENV)
-})
+  path: path.resolve(__dirname, `../env/.env.${process.env.BASE_ENV}`)
+});
 
-const tsxRegex = /\.(ts|tsx)$/
-const cssRegex = /\.css$/
-const sassRegex = /\.(scss|sass)$/
-const lessRegex = /\.less$/
-const stylRegex = /\.styl$/
-const imageRegex = /\.(png|jpe?g|gif|svg)$/i
-const fontRegex = /\.(ttf|woff2?|eot|otf)$/
-const mediaRegex = /\.(mp4|webm|ogg|mp3|wav|flac|aac)$/
-const jsonRegex = /\.json$/
+const tsxRegex = /\.(ts|tsx)$/;
+const cssRegex = /\.css$/;
+const sassRegex = /\.(scss|sass)$/;
+const lessRegex = /\.less$/;
+const stylRegex = /\.styl$/;
+const imageRegex = /\.(png|jpe?g|gif|svg)$/i;
+const fontRegex = /\.(ttf|woff2?|eot|otf)$/;
+const mediaRegex = /\.(mp4|webm|ogg|mp3|wav|flac|aac)$/;
+const jsonRegex = /\.json$/;
 
 const styleLoadersArray = [
   isDev ? 'style-loader' : MiniCssExtractPlugin.loader, // 开发环境使用style-looader,打包模式抽离css
@@ -36,7 +33,7 @@ const styleLoadersArray = [
     }
   },
   'postcss-loader'
-]
+];
 
 const baseConfig: Configuration = {
   entry: path.join(__dirname, '../src/index.tsx'), // 入口文件
@@ -58,7 +55,7 @@ const baseConfig: Configuration = {
         // use: ['thread-loader', 'babel-loader'] // 项目变大之后再开启多进程loader
       },
       {
-        test: cssRegex, //匹配 css 文件
+        test: cssRegex, // 匹配 css 文件
         use: styleLoadersArray
       },
       {
@@ -165,7 +162,7 @@ const baseConfig: Configuration = {
       // 压缩html资源
       minify: {
         removeAttributeQuotes: true,
-        collapseWhitespace: true, //去空格
+        collapseWhitespace: true, // 去空格
         removeComments: true, // 去注释
         minifyJS: true, // 在脚本元素和事件属性中缩小JavaScript(使用UglifyJS)
         minifyCSS: true // 缩小CSS样式元素和样式属性
@@ -190,6 +187,6 @@ const baseConfig: Configuration = {
     */
     type: 'filesystem' // 使用文件缓存
   }
-}
+};
 
-export default baseConfig
+export default baseConfig;
