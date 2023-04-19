@@ -1,0 +1,43 @@
+body {
+    margin: 0;
+}
+
+.sider {
+    height: 100vh;
+
+    .logo {
+        width: 196px;
+        height: 39px;
+        vertical-align: middle;
+        margin-top: 20px;
+        background-image: url("https://gccndocumentsitestorage.blob.core.chinacloudapi.cn/document-site-files/images/4f9d3b0a-9695-4153-8832-0f8b558702ae/spJS_%E6%A8%AA%E7%89%88_128.a2806b.png");
+        background-size: contain;
+    }
+
+    .siderMenu {
+        margin-top: 30px;
+    }
+}
+
+.header {
+    padding: 0;
+    background: #fff;
+    padding-left: 20px;
+    font-size: 32px;
+    font-weight: 600;
+}
+
+.contentContainer {
+    margin: 24px 16px 0;
+    overflow: initial;
+
+    .content {
+        background: #fff;
+        padding: 24px;
+        min-height: 75vh;
+    }
+}
+
+.footer {
+    text-align: center;
+}
