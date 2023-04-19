@@ -17,10 +17,11 @@ import scssStyles from './quotationTable.scss';
 interface QuotationDataType {
     key: string;
     name: string;
+    template?: TemplateDataType[];
 }
 
 interface TemplateDataType {
-    key: React.Key;
+    key: string;
     name: string;
     size: string;
     unit: string;
@@ -67,9 +68,13 @@ const templateData: TemplateDataType[] = [
 export class QuotationTable extends React.Component {
     private selectedRows = [] as TemplateDataType[];
 
+    private designer;
+
     state = {
         templateDrawerVisible: false,
-        contentShownIndex: 1
+        contentShownIndex: 1,
+        templateSettingSelectIndex: 0,
+        editSelectIndex: 0
     };
 
     quotationTableColumns: ColumnsType<QuotationDataType> = [
@@ -82,11 +87,15 @@ export class QuotationTable extends React.Component {
         {
             title: '操作',
             key: 'action',
-            render: () => (
+            render: (_, record) => (
                 <Space size='large'>
-                    <a onClick={this.openTemplateDrawer}>模板配置</a>
-                    <a onClick={this.openSpreadSheetEditor}>编辑</a>
-                    <a>发布报价</a>
+                    <Button type='default' onClick={() => this.openTemplateDrawer(record)}>
+                        模板配置
+                    </Button>
+                    <Button type='default' onClick={() => this.showSpreadSheetEditor(record)}>
+                        编辑
+                    </Button>
+                    <Button type='primary'>发布报价</Button>
                 </Space>
             )
         }
@@ -104,13 +113,16 @@ export class QuotationTable extends React.Component {
         });
     };
 
-    private openTemplateDrawer = () => {
+    private openTemplateDrawer = record => {
         this.setState({
-            templateDrawerVisible: true
+            templateDrawerVisible: true,
+            selectedRowsIndex: record.key - 1
         });
     };
 
     private clickSaveButtonHandler = () => {
+        quotationTableData[this.state.templateSettingSelectIndex].template = [...this.selectedRows];
+
         message.success({
             content: '模板配置保存成功',
             duration: 1,
@@ -133,16 +145,81 @@ export class QuotationTable extends React.Component {
         });
     };
 
-    private openQuotationTable = () => {
+    private showQuotationTable = () => {
         this.setState({
             contentShownIndex: 1
         });
     };
 
-    private openSpreadSheetEditor = () => {
+    private showSpreadSheetEditor = record => {
         this.setState({
-            contentShownIndex: 2
+            contentShownIndex: 2,
+            editSelectIndex: record.key - 1
         });
+    };
+
+    private initDesigner = (designerEntity: GCD.Spread.Sheets.Designer.Designer) => {
+        this.designer = designerEntity;
+
+        const spread = this.designer.getWorkbook() as GC.Spread.Sheets.Workbook;
+        const sheet: GC.Spread.Sheets.Worksheet = spread.getActiveSheet();
+
+        this.renderDataToDesigner(sheet);
+    };
+
+    private renderDataToDesigner = (sheet: GC.Spread.Sheets.Worksheet) => {
+        const data = quotationTableData[this.state.editSelectIndex];
+        const designerColumns = ['名称', '规格', '数量', '单价', '单位', '报价清单'];
+        const { name, template } = data;
+        if (name) {
+            sheet.addSpan(0, 0, 1, designerColumns.length, GC.Spread.Sheets.SheetArea.viewport);
+            sheet.getCell(0, 0, GC.Spread.Sheets.SheetArea.viewport).font('bold 20px 微软雅黑');
+            sheet.setValue(0, 0, name);
+        }
+
+        designerColumns.forEach((item, index) => {
+            sheet.setValue(1, index, item);
+
+            const currentCell = sheet.getCell(1, index, GC.Spread.Sheets.SheetArea.viewport);
+            currentCell.backColor('#5c9ad2');
+            currentCell.foreColor('#fff');
+        });
+
+        if (template) {
+            template.forEach((item, index) => {
+                sheet.setValue(index + 2, 0, item.name);
+                sheet.setValue(index + 2, 1, item.size);
+                sheet.setValue(index + 2, 2, 1);
+                sheet.setValue(index + 2, 3, '');
+                sheet.setValue(index + 2, 4, item.unit);
+                sheet.setValue(index + 2, 5, item.desc);
+
+                const currentRow = sheet.getRange(index + 2, 0, 1, designerColumns.length);
+                if (index % 2 === 0) {
+                    currentRow.backColor('#dbeaf6');
+                } else {
+                    currentRow.backColor('#fff');
+                }
+            });
+        }
+
+        const all = sheet.getRange(
+            0,
+            0,
+            2 + (template ? template.length : 0),
+            designerColumns.length
+        );
+        all.hAlign(GC.Spread.Sheets.HorizontalAlign.center);
+        all.vAlign(GC.Spread.Sheets.VerticalAlign.center);
+
+        for (let i = 0; i < designerColumns.length; i++) {
+            sheet.autoFitColumn(i);
+            sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 20);
+        }
+
+        for (let i = 0; i < (template ? template.length : 0) + 2; i++) {
+            sheet.setRowHeight(i, sheet.getRowHeight(i) + 20);
+        }
     };
 
     private renderQuotationTable = () => {
@@ -192,7 +269,7 @@ export class QuotationTable extends React.Component {
             <div>
                 <Button
                     className={scssStyles.button}
-                    onClick={this.openQuotationTable}
+                    onClick={this.showQuotationTable}
                     type='default'
                 >
                     返回
@@ -211,6 +288,7 @@ export class QuotationTable extends React.Component {
                         styleInfo={{ width: '100%', height: '78vh' }}
                         config={GCD.Spread.Sheets.Designer.DefaultConfig}
                         spreadOptions={{ sheetCount: 2 }}
+                        designerInitialized={this.initDesigner.bind(this)}
                     ></Designer>
                 </div>
             </div>
