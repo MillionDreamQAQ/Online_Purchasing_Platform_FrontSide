@@ -2,9 +2,17 @@ import React from 'react';
 import { Button, Drawer, Space, Table, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import * as GC from '@grapecity/spread-sheets';
-import { SpreadSheets } from '@grapecity/spread-sheets-react';
+import '@grapecity/spread-sheets-print';
+import '@grapecity/spread-sheets-shapes';
+import '@grapecity/spread-sheets-slicers';
+import '@grapecity/spread-sheets-pivot-addon';
+import '@grapecity/spread-sheets-tablesheet';
+import '@grapecity/spread-sheets-io';
+import '@grapecity/spread-sheets-resources-zh';
+import '@grapecity/spread-sheets-designer-resources-cn';
+import * as GCD from '@grapecity/spread-sheets-designer';
+import { Designer } from '@grapecity/spread-sheets-designer-react';
 import scssStyles from './quotationTable.scss';
-import '../../assets/css/gc.spread.sheets.excel2016colorful.16.0.2.css';
 
 interface QuotationDataType {
     key: string;
@@ -104,13 +112,23 @@ export class QuotationTable extends React.Component {
 
     private clickSaveButtonHandler = () => {
         message.success({
-            content: '操作成功',
+            content: '模板配置保存成功',
             duration: 1,
             style: {
                 marginTop: '50px'
             },
             onClose: () => {
                 this.closeTemplateDrawer();
+            }
+        });
+    };
+
+    private clickSaveTemplateButtonHandler = () => {
+        message.success({
+            content: '模板保存成功',
+            duration: 1,
+            style: {
+                marginTop: '50px'
             }
         });
     };
@@ -175,41 +193,28 @@ export class QuotationTable extends React.Component {
                 <Button
                     className={scssStyles.button}
                     onClick={this.openQuotationTable}
+                    type='default'
+                >
+                    返回
+                </Button>
+
+                <Button
+                    className={scssStyles.button}
+                    onClick={this.clickSaveTemplateButtonHandler}
                     type='primary'
                 >
                     保存模板
                 </Button>
+
                 <div className={scssStyles.quotationEditor}>
-                    <SpreadSheets
-                        workbookInitialized={spread => this.initSpread(spread)}
-                    ></SpreadSheets>
+                    <Designer
+                        styleInfo={{ width: '100%', height: '78vh' }}
+                        config={GCD.Spread.Sheets.Designer.DefaultConfig}
+                        spreadOptions={{ sheetCount: 2 }}
+                    ></Designer>
                 </div>
             </div>
         );
-    };
-
-    private initSpread = (spread: GC.Spread.Sheets.Workbook) => {
-        const sheet = spread.getActiveSheet();
-        sheet.setValue(0, 0, '报价单名称');
-        sheet.setValue(0, 1, '西安酒店报价单');
-        sheet.setValue(1, 0, '报价单编号');
-        sheet.setValue(1, 1, '2021-01-01');
-        sheet.setValue(2, 0, '报价单日期');
-        sheet.setValue(2, 1, '2021-01-01');
-        sheet.setValue(3, 0, '报价单备注');
-        sheet.setValue(3, 1, '备注');
-        sheet.setValue(4, 0, '报价单模板');
-        sheet.setValue(4, 1, '模板名称');
-        sheet.setValue(5, 0, '报价单模板编号');
-        sheet.setValue(5, 1, '模板编号');
-        sheet.setValue(6, 0, '报价单模板日期');
-        sheet.setValue(6, 1, '模板日期');
-        sheet.setValue(7, 0, '报价单模板备注');
-        sheet.setValue(7, 1, '模板备注');
-        sheet.setValue(8, 0, '报价单模板版本');
-        sheet.setValue(8, 1, '模板版本');
-        sheet.setValue(9, 0, '报价单模板创建人');
-        sheet.setValue(9, 1, '模板创建人');
     };
 
     private renderContent = () => {
