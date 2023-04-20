@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { Input } from 'antd';
+import { Button, Input } from 'antd';
 import scssStyles from './configItem.scss';
 
 export interface ConfigValue {
@@ -13,9 +13,10 @@ export interface ConfigValue {
 interface IConfigInputsProps {
     index: number;
     onChange: (config: ConfigValue) => void;
+    onRemove: (index: number) => void;
 }
 
-export const ConfigItems: FC<IConfigInputsProps> = ({ index, onChange }) => {
+export const ConfigItems: FC<IConfigInputsProps> = ({ index, onChange, onRemove }) => {
     const [name, setName] = useState('');
     const [size, setSize] = useState('');
     const [unit, setUnit] = useState('');
@@ -41,9 +42,25 @@ export const ConfigItems: FC<IConfigInputsProps> = ({ index, onChange }) => {
         onChange({ key: Date.now().valueOf().toString(), name, size, unit, desc: e.target.value });
     };
 
+    const handleRemoveClick = () => {
+        onRemove(index - 1);
+    };
+
     return (
         <div>
-            <div style={{ marginBottom: '10px' }}>配置项{index}</div>
+            <div
+                style={{
+                    marginBottom: '10px',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                }}
+            >
+                配置项{index}
+                <Button type='primary' danger onClick={handleRemoveClick}>
+                    删除
+                </Button>
+            </div>
             <Input
                 style={{ width: '35%' }}
                 className={scssStyles.templateInput}

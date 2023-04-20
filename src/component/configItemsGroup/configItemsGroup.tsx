@@ -32,6 +32,15 @@ export const ConfigItemsGroup: FC<IConfigItemsGroupProps> = ({ onChange }) => {
         ]);
     };
 
+    const onRemoveChildClick = (index: number) => {
+        const newValues = [...values];
+        newValues.splice(index, 1);
+        setValues(newValues);
+        setItemCount(itemCount - 1);
+
+        onChange(newValues);
+    };
+
     const childInputs = [] as any;
 
     for (let i = 0; i < itemCount; i++) {
@@ -42,6 +51,7 @@ export const ConfigItemsGroup: FC<IConfigItemsGroupProps> = ({ onChange }) => {
                 onChange={newValue => {
                     onInputChange(i, newValue);
                 }}
+                onRemove={onRemoveChildClick}
             />
         );
     }
@@ -49,7 +59,7 @@ export const ConfigItemsGroup: FC<IConfigItemsGroupProps> = ({ onChange }) => {
     return (
         <div>
             {childInputs}
-            <Button style={{ marginBottom: '10px' }} type='primary' onClick={onAddChildClick}>
+            <Button style={{ marginBottom: '10px' }} type='default' onClick={onAddChildClick}>
                 添加配置项
             </Button>
         </div>

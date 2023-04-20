@@ -13,7 +13,12 @@ import '@grapecity/spread-sheets-designer-resources-cn';
 import * as GCD from '@grapecity/spread-sheets-designer';
 import { Designer } from '@grapecity/spread-sheets-designer-react';
 import scssStyles from './quotationTable.scss';
-import { addQuotation, getAllQuotations, templateSelect } from '@/request/quotationRequest';
+import {
+    addQuotation,
+    deleteQuotation,
+    getAllQuotations,
+    templateSelect
+} from '@/request/quotationRequest';
 import { IQuotation, ITemplate } from '@/request/model';
 import { ConfigItems, ConfigValue } from '../configItem/configItem';
 import { ConfigItemsGroup } from '../configItemsGroup/configItemsGroup';
@@ -39,15 +44,15 @@ const templateTableColumns: ColumnsType<ITemplate> = [
 ];
 
 export const QuotationTable: FC = () => {
-    const [quotationTableData, setQuotationTableData] = useState<IQuotation[]>([]);
+    const [quotationData, setQuotationData] = useState<IQuotation[]>([]);
 
     const [contentShownIndex, setContentShownIndex] = useState(1);
 
     const [addQuotationDrawerVisible, setAddQuotationDrawerVisible] = useState(false);
-    const [templateSetDrawerVisible, setTemplateSetDrawerVisible] = useState(false);
+    const [templateSettingDrawerVisible, setTemplateSettingDrawerVisible] = useState(false);
 
     const [editSelectIndex, setEditSelectIndex] = useState(-1);
-    const [editTemplateIndex, setEditTemplateIndex] = useState(-1);
+    const [templateSettingIndex, setTemplateSettingIndex] = useState(-1);
 
     const [selectTemplate, setSelectTemplate] = useState<ITemplate[]>([]);
     const [addQuotationName, setAddQuotationName] = useState('');
@@ -57,21 +62,23 @@ export const QuotationTable: FC = () => {
 
     useEffect(() => {
         async function fetchData() {
-            const res = await getAllQuotations();
-
-            const quotations = res.data.map(
-                ({ quotationName, template, key, selectedTemplate }) => ({
-                    key,
-                    quotationName,
-                    template,
-                    selectedTemplate
-                })
-            );
-
-            setQuotationTableData(quotations);
+            await refreshQuotations();
         }
         fetchData();
     }, []);
+
+    const refreshQuotations = async () => {
+        const res = await getAllQuotations();
+
+        const quotations = res.data.map(({ quotationName, template, key, selectedTemplate }) => ({
+            key,
+            quotationName,
+            template,
+            selectedTemplate
+        }));
+
+        setQuotationData(quotations);
+    };
 
     const handleQuotationInputChange = e => {
         setAddQuotationName(e.target.value);
@@ -92,8 +99,8 @@ export const QuotationTable: FC = () => {
                     <Button
                         type='default'
                         onClick={() => {
-                            setTemplateSetDrawerVisible(true);
-                            setEditTemplateIndex(index);
+                            setTemplateSettingDrawerVisible(true);
+                            setTemplateSettingIndex(index);
                         }}
                     >
                         模板配置
@@ -108,6 +115,37 @@ export const QuotationTable: FC = () => {
                         编辑
                     </Button>
                     <Button type='primary'>发布报价</Button>
+                    <Button
+                        type='primary'
+                        danger
+                        onClick={async () => {
+                            const deleteRes = await deleteQuotation(
+                                quotationData[index].quotationName
+                            );
+
+                            if (deleteRes.code === 200) {
+                                message.success({
+                                    content: deleteRes.msg,
+                                    duration: 1,
+                                    style: {
+                                        marginTop: '50px'
+                                    }
+                                });
+                            } else {
+                                message.error({
+                                    content: deleteRes.msg,
+                                    duration: 1,
+                                    style: {
+                                        marginTop: '50px'
+                                    }
+                                });
+                            }
+
+                            await refreshQuotations();
+                        }}
+                    >
+                        删除
+                    </Button>
                 </Space>
             )
         }
@@ -117,7 +155,7 @@ export const QuotationTable: FC = () => {
         onChange: (selectedRowKeys: React.Key[], selectedRows: ITemplate[]) => {
             setSelectTemplate(selectedRows);
         },
-        defaultSelectedRowKeys: quotationTableData[editTemplateIndex]?.selectedTemplate?.map(
+        defaultSelectedRowKeys: quotationData[templateSettingIndex]?.selectedTemplate?.map(
             ({ key }) => key
         )
     };
@@ -132,14 +170,14 @@ export const QuotationTable: FC = () => {
                 }
             });
         } else {
-            const res = await addQuotation({
+            const addResponse = await addQuotation({
                 key: Date.now().valueOf().toString(),
                 quotationName: addQuotationName,
                 template: configValue,
                 selectedTemplate: []
             });
 
-            if (res.code === 200) {
+            if (addResponse.code === 200) {
                 message.success({
                     content: '报价单添加成功',
                     duration: 1,
@@ -149,25 +187,27 @@ export const QuotationTable: FC = () => {
                 });
             } else {
                 message.error({
-                    content: res.msg,
+                    content: addResponse.msg,
                     duration: 1,
                     style: {
                         marginTop: '50px'
                     }
                 });
             }
+
+            await refreshQuotations();
         }
     };
 
     const saveQuotationTemplateSelect = async () => {
         const res = await templateSelect(
-            quotationTableData[editTemplateIndex].quotationName,
+            quotationData[templateSettingIndex].quotationName,
             selectTemplate
         );
 
         if (res.code === 200) {
             message.success({
-                content: '模板配置成功',
+                content: '模板配置保存成功',
                 duration: 1,
                 style: {
                     marginTop: '50px'
@@ -182,74 +222,8 @@ export const QuotationTable: FC = () => {
                 }
             });
         }
-    };
 
-    const initDesigner = (designerEntity: GCD.Spread.Sheets.Designer.Designer) => {
-        designer = designerEntity;
-
-        const spread = designer.getWorkbook() as GC.Spread.Sheets.Workbook;
-        const sheet: GC.Spread.Sheets.Worksheet = spread.getActiveSheet();
-
-        renderDataToDesigner(sheet);
-    };
-
-    const renderDataToDesigner = (sheet: GC.Spread.Sheets.Worksheet) => {
-        sheet.suspendPaint();
-
-        const data = quotationTableData[editSelectIndex];
-        const designerColumns = ['名称', '规格', '数量', '单价', '单位', '报价清单'];
-        const { quotationName, selectedTemplate } = data;
-        if (quotationName) {
-            sheet.addSpan(0, 0, 1, designerColumns.length, GC.Spread.Sheets.SheetArea.viewport);
-            sheet.getCell(0, 0, GC.Spread.Sheets.SheetArea.viewport).font('bold 20px 微软雅黑');
-            sheet.setValue(0, 0, quotationName);
-        }
-
-        designerColumns.forEach((item, index) => {
-            sheet.setValue(1, index, item);
-
-            const currentCell = sheet.getCell(1, index, GC.Spread.Sheets.SheetArea.viewport);
-            currentCell.backColor('#5c9ad2');
-            currentCell.foreColor('#fff');
-        });
-
-        if (selectedTemplate) {
-            selectedTemplate.forEach((item, index) => {
-                sheet.setValue(index + 2, 0, item.name);
-                sheet.setValue(index + 2, 1, item.size);
-                sheet.setValue(index + 2, 2, 1);
-                sheet.setValue(index + 2, 3, '');
-                sheet.setValue(index + 2, 4, item.unit);
-                sheet.setValue(index + 2, 5, item.desc);
-
-                const currentRow = sheet.getRange(index + 2, 0, 1, designerColumns.length);
-                if (index % 2 === 0) {
-                    currentRow.backColor('#dbeaf6');
-                } else {
-                    currentRow.backColor('#fff');
-                }
-            });
-        }
-
-        const all = sheet.getRange(
-            0,
-            0,
-            2 + (selectedTemplate ? selectedTemplate.length : 0),
-            designerColumns.length
-        );
-        all.hAlign(GC.Spread.Sheets.HorizontalAlign.center);
-        all.vAlign(GC.Spread.Sheets.VerticalAlign.center);
-
-        for (let i = 0; i < designerColumns.length; i++) {
-            sheet.autoFitColumn(i);
-            sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 20);
-        }
-
-        for (let i = 0; i < (selectedTemplate ? selectedTemplate.length : 0) + 2; i++) {
-            sheet.setRowHeight(i, sheet.getRowHeight(i) + 20);
-        }
-
-        sheet.resumePaint();
+        await refreshQuotations();
     };
 
     const renderQuotationTable = () => {
@@ -271,14 +245,10 @@ export const QuotationTable: FC = () => {
                     导出报价单
                 </Button>
 
-                <Button className={scssStyles.button} type='primary' danger>
-                    删除
-                </Button>
-
                 <Table
                     rowKey={quotationTableData => quotationTableData.key}
                     columns={quotationTableColumns}
-                    dataSource={quotationTableData}
+                    dataSource={quotationData}
                 />
 
                 {/* Template Drawer */}
@@ -287,8 +257,8 @@ export const QuotationTable: FC = () => {
                     size='large'
                     width='960px'
                     placement='right'
-                    onClose={setTemplateSetDrawerVisible.bind(this, false)}
-                    open={templateSetDrawerVisible}
+                    onClose={setTemplateSettingDrawerVisible.bind(this, false)}
+                    open={templateSettingDrawerVisible}
                 >
                     <div>
                         <Table
@@ -297,7 +267,7 @@ export const QuotationTable: FC = () => {
                                 ...templateRowSelection
                             }}
                             columns={templateTableColumns}
-                            dataSource={quotationTableData[editTemplateIndex]?.template}
+                            dataSource={quotationData[templateSettingIndex]?.template}
                         />
                         <Button type='primary' onClick={saveQuotationTemplateSelect}>
                             保存配置
@@ -360,6 +330,74 @@ export const QuotationTable: FC = () => {
                 </div>
             </div>
         );
+    };
+
+    const initDesigner = (designerEntity: GCD.Spread.Sheets.Designer.Designer) => {
+        designer = designerEntity;
+
+        const spread = designer.getWorkbook() as GC.Spread.Sheets.Workbook;
+        const sheet: GC.Spread.Sheets.Worksheet = spread.getActiveSheet();
+
+        renderDataToDesigner(sheet);
+    };
+
+    const renderDataToDesigner = (sheet: GC.Spread.Sheets.Worksheet) => {
+        sheet.suspendPaint();
+
+        const data = quotationData[editSelectIndex];
+        const designerColumns = ['名称', '规格', '数量', '单价', '单位', '报价清单'];
+        const { quotationName, selectedTemplate } = data;
+        if (quotationName) {
+            sheet.addSpan(0, 0, 1, designerColumns.length, GC.Spread.Sheets.SheetArea.viewport);
+            sheet.getCell(0, 0, GC.Spread.Sheets.SheetArea.viewport).font('bold 20px 微软雅黑');
+            sheet.setValue(0, 0, quotationName);
+        }
+
+        designerColumns.forEach((item, index) => {
+            sheet.setValue(1, index, item);
+
+            const currentCell = sheet.getCell(1, index, GC.Spread.Sheets.SheetArea.viewport);
+            currentCell.backColor('#5c9ad2');
+            currentCell.foreColor('#fff');
+        });
+
+        if (selectedTemplate) {
+            selectedTemplate.forEach((item, index) => {
+                sheet.setValue(index + 2, 0, item.name);
+                sheet.setValue(index + 2, 1, item.size);
+                sheet.setValue(index + 2, 2, 1);
+                sheet.setValue(index + 2, 3, '');
+                sheet.setValue(index + 2, 4, item.unit);
+                sheet.setValue(index + 2, 5, item.desc);
+
+                const currentRow = sheet.getRange(index + 2, 0, 1, designerColumns.length);
+                if (index % 2 === 0) {
+                    currentRow.backColor('#dbeaf6');
+                } else {
+                    currentRow.backColor('#fff');
+                }
+            });
+        }
+
+        const all = sheet.getRange(
+            0,
+            0,
+            2 + (selectedTemplate ? selectedTemplate.length : 0),
+            designerColumns.length
+        );
+        all.hAlign(GC.Spread.Sheets.HorizontalAlign.center);
+        all.vAlign(GC.Spread.Sheets.VerticalAlign.center);
+
+        for (let i = 0; i < designerColumns.length; i++) {
+            sheet.autoFitColumn(i);
+            sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 20);
+        }
+
+        for (let i = 0; i < (selectedTemplate ? selectedTemplate.length : 0) + 2; i++) {
+            sheet.setRowHeight(i, sheet.getRowHeight(i) + 20);
+        }
+
+        sheet.resumePaint();
     };
 
     const renderContent = () => {
