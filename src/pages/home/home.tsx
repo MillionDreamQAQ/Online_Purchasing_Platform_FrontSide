@@ -2,7 +2,7 @@ import React from 'react';
 import { Layout, Menu } from 'antd';
 import { UploadOutlined, UserOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import scssStyles from './home.scss';
-import { QuotationTable } from '../quotationTable/quotationTable';
+import { QuotationTable } from '../../component/quotationTable/quotationTable';
 
 const { Header, Content, Footer, Sider } = Layout;
 
