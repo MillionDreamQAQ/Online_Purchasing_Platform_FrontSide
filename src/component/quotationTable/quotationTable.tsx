@@ -1,5 +1,5 @@
-import React from 'react';
-import { Button, Drawer, Space, Table, message } from 'antd';
+import { FC, useEffect, useState } from 'react';
+import { Button, Drawer, Input, Space, Table, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import * as GC from '@grapecity/spread-sheets';
 import '@grapecity/spread-sheets-print';
@@ -13,29 +13,12 @@ import '@grapecity/spread-sheets-designer-resources-cn';
 import * as GCD from '@grapecity/spread-sheets-designer';
 import { Designer } from '@grapecity/spread-sheets-designer-react';
 import scssStyles from './quotationTable.scss';
+import { addQuotation, getAllQuotations, templateSelect } from '@/request/quotationRequest';
+import { IQuotation, ITemplate } from '@/request/model';
+import { ConfigItems, ConfigValue } from '../configItem/configItem';
+import { ConfigItemsGroup } from '../configItemsGroup/configItemsGroup';
 
-interface QuotationDataType {
-    key: string;
-    name: string;
-    template?: TemplateDataType[];
-}
-
-interface TemplateDataType {
-    key: string;
-    name: string;
-    size: string;
-    unit: string;
-    desc: string;
-}
-
-const quotationTableData: QuotationDataType[] = [
-    {
-        key: '1',
-        name: '西安酒店报价单'
-    }
-];
-
-const templateColumns: ColumnsType<TemplateDataType> = [
+const templateTableColumns: ColumnsType<ITemplate> = [
     {
         title: '名称',
         dataIndex: 'name',
@@ -55,44 +38,73 @@ const templateColumns: ColumnsType<TemplateDataType> = [
     }
 ];
 
-const templateData: TemplateDataType[] = [
-    {
-        key: '1',
-        name: '行李柜',
-        size: '750*500*2480',
-        unit: '件',
-        desc: '多层板基材贴三聚氰胺饰面环保粘合剂封边优质五金件连接（不含石材与灯带）'
-    }
-];
+export const QuotationTable: FC = () => {
+    const [quotationTableData, setQuotationTableData] = useState<IQuotation[]>([]);
 
-export class QuotationTable extends React.Component {
-    private selectedRows = [] as TemplateDataType[];
+    const [contentShownIndex, setContentShownIndex] = useState(1);
 
-    private designer;
+    const [addQuotationDrawerVisible, setAddQuotationDrawerVisible] = useState(false);
+    const [templateSetDrawerVisible, setTemplateSetDrawerVisible] = useState(false);
 
-    state = {
-        templateDrawerVisible: false,
-        contentShownIndex: 1,
-        templateSettingSelectIndex: 0,
-        editSelectIndex: 0
+    const [editSelectIndex, setEditSelectIndex] = useState(-1);
+    const [editTemplateIndex, setEditTemplateIndex] = useState(-1);
+
+    const [selectTemplate, setSelectTemplate] = useState<ITemplate[]>([]);
+    const [addQuotationName, setAddQuotationName] = useState('');
+
+    let designer: GCD.Spread.Sheets.Designer.Designer;
+    let configValue = [] as ConfigValue[];
+
+    useEffect(() => {
+        async function fetchData() {
+            const res = await getAllQuotations();
+
+            const quotations = res.data.map(
+                ({ quotationName, template, key, selectedTemplate }) => ({
+                    key,
+                    quotationName,
+                    template,
+                    selectedTemplate
+                })
+            );
+
+            setQuotationTableData(quotations);
+        }
+        fetchData();
+    }, []);
+
+    const handleQuotationInputChange = e => {
+        setAddQuotationName(e.target.value);
     };
 
-    quotationTableColumns: ColumnsType<QuotationDataType> = [
+    const quotationTableColumns: ColumnsType<IQuotation> = [
         {
             title: '报价单名称',
-            dataIndex: 'name',
-            key: 'name',
+            dataIndex: 'quotationName',
+            key: 'quotationName',
             render: name => <a>{name}</a>
         },
         {
             title: '操作',
             key: 'action',
-            render: (_, record) => (
+            render: (text, record, index) => (
                 <Space size='large'>
-                    <Button type='default' onClick={() => this.openTemplateDrawer(record)}>
+                    <Button
+                        type='default'
+                        onClick={() => {
+                            setTemplateSetDrawerVisible(true);
+                            setEditTemplateIndex(index);
+                        }}
+                    >
                         模板配置
                     </Button>
-                    <Button type='default' onClick={() => this.showSpreadSheetEditor(record)}>
+                    <Button
+                        type='default'
+                        onClick={() => {
+                            setContentShownIndex(2);
+                            setEditSelectIndex(index);
+                        }}
+                    >
                         编辑
                     </Button>
                     <Button type='primary'>发布报价</Button>
@@ -101,80 +113,96 @@ export class QuotationTable extends React.Component {
         }
     ];
 
-    templateRowSelection = {
-        onChange: (selectedRowKeys: React.Key[], selectedRows: TemplateDataType[]) => {
-            this.selectedRows = selectedRows;
+    const templateRowSelection = {
+        onChange: (selectedRowKeys: React.Key[], selectedRows: ITemplate[]) => {
+            setSelectTemplate(selectedRows);
+        },
+        defaultSelectedRowKeys: quotationTableData[editTemplateIndex]?.selectedTemplate?.map(
+            ({ key }) => key
+        )
+    };
+
+    const addQuotationButtonHandler = async () => {
+        if (addQuotationName === '') {
+            message.error({
+                content: '报价单名称不能为空',
+                duration: 1,
+                style: {
+                    marginTop: '50px'
+                }
+            });
+        } else {
+            const res = await addQuotation({
+                key: Date.now().valueOf().toString(),
+                quotationName: addQuotationName,
+                template: configValue,
+                selectedTemplate: []
+            });
+
+            if (res.code === 200) {
+                message.success({
+                    content: '报价单添加成功',
+                    duration: 1,
+                    style: {
+                        marginTop: '50px'
+                    }
+                });
+            } else {
+                message.error({
+                    content: res.msg,
+                    duration: 1,
+                    style: {
+                        marginTop: '50px'
+                    }
+                });
+            }
         }
     };
 
-    private closeTemplateDrawer = () => {
-        this.setState({
-            templateDrawerVisible: false
-        });
+    const saveQuotationTemplateSelect = async () => {
+        const res = await templateSelect(
+            quotationTableData[editTemplateIndex].quotationName,
+            selectTemplate
+        );
+
+        if (res.code === 200) {
+            message.success({
+                content: '模板配置成功',
+                duration: 1,
+                style: {
+                    marginTop: '50px'
+                }
+            });
+        } else {
+            message.error({
+                content: res.msg,
+                duration: 1,
+                style: {
+                    marginTop: '50px'
+                }
+            });
+        }
     };
 
-    private openTemplateDrawer = record => {
-        this.setState({
-            templateDrawerVisible: true,
-            selectedRowsIndex: record.key - 1
-        });
-    };
+    const initDesigner = (designerEntity: GCD.Spread.Sheets.Designer.Designer) => {
+        designer = designerEntity;
 
-    private clickSaveButtonHandler = () => {
-        quotationTableData[this.state.templateSettingSelectIndex].template = [...this.selectedRows];
-
-        message.success({
-            content: '模板配置保存成功',
-            duration: 1,
-            style: {
-                marginTop: '50px'
-            },
-            onClose: () => {
-                this.closeTemplateDrawer();
-            }
-        });
-    };
-
-    private clickSaveTemplateButtonHandler = () => {
-        message.success({
-            content: '模板保存成功',
-            duration: 1,
-            style: {
-                marginTop: '50px'
-            }
-        });
-    };
-
-    private showQuotationTable = () => {
-        this.setState({
-            contentShownIndex: 1
-        });
-    };
-
-    private showSpreadSheetEditor = record => {
-        this.setState({
-            contentShownIndex: 2,
-            editSelectIndex: record.key - 1
-        });
-    };
-
-    private initDesigner = (designerEntity: GCD.Spread.Sheets.Designer.Designer) => {
-        this.designer = designerEntity;
-
-        const spread = this.designer.getWorkbook() as GC.Spread.Sheets.Workbook;
+        const spread = designer.getWorkbook() as GC.Spread.Sheets.Workbook;
         const sheet: GC.Spread.Sheets.Worksheet = spread.getActiveSheet();
 
-        this.renderDataToDesigner(sheet);
+        renderDataToDesigner(sheet);
     };
 
-    private renderDataToDesigner = (sheet: GC.Spread.Sheets.Worksheet) => {
-        const data = quotationTableData[this.state.editSelectIndex];
+    const renderDataToDesigner = (sheet: GC.Spread.Sheets.Worksheet) => {
+        sheet.suspendPaint();
+
+        const data = quotationTableData[editSelectIndex];
         const designerColumns = ['名称', '规格', '数量', '单价', '单位', '报价清单'];
-        const { name, template } = data;
-        if (name) {
+        const { quotationName, selectedTemplate } = data;
+        if (quotationName) {
             sheet.addSpan(0, 0, 1, designerColumns.length, GC.Spread.Sheets.SheetArea.viewport);
             sheet.getCell(0, 0, GC.Spread.Sheets.SheetArea.viewport).font('bold 20px 微软雅黑');
-            sheet.setValue(0, 0, name);
+            sheet.setValue(0, 0, quotationName);
         }
 
         designerColumns.forEach((item, index) => {
@@ -185,8 +213,8 @@ export class QuotationTable extends React.Component {
             currentCell.foreColor('#fff');
         });
 
-        if (template) {
-            template.forEach((item, index) => {
+        if (selectedTemplate) {
+            selectedTemplate.forEach((item, index) => {
                 sheet.setValue(index + 2, 0, item.name);
                 sheet.setValue(index + 2, 1, item.size);
                 sheet.setValue(index + 2, 2, 1);
@@ -206,7 +234,7 @@ export class QuotationTable extends React.Component {
         const all = sheet.getRange(
             0,
             0,
-            2 + (template ? template.length : 0),
+            2 + (selectedTemplate ? selectedTemplate.length : 0),
             designerColumns.length
         );
         all.hAlign(GC.Spread.Sheets.HorizontalAlign.center);
@@ -217,15 +245,25 @@ export class QuotationTable extends React.Component {
             sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 20);
         }
 
-        for (let i = 0; i < (template ? template.length : 0) + 2; i++) {
+        for (let i = 0; i < (selectedTemplate ? selectedTemplate.length : 0) + 2; i++) {
             sheet.setRowHeight(i, sheet.getRowHeight(i) + 20);
         }
+
+        sheet.resumePaint();
     };
 
-    private renderQuotationTable = () => {
+    const renderQuotationTable = () => {
         return (
             <div>
-                <Button className={scssStyles.button} type='default'>
+                <Button
+                    className={scssStyles.button}
+                    onClick={setAddQuotationDrawerVisible.bind(this, true)}
+                    type='primary'
+                >
+                    添加报价单
+                </Button>
+
+                <Button className={scssStyles.button} type='primary'>
                     导入报价单
                 </Button>
 
@@ -237,26 +275,55 @@ export class QuotationTable extends React.Component {
                     删除
                 </Button>
 
-                <Table columns={this.quotationTableColumns} dataSource={quotationTableData} />
+                <Table
+                    rowKey={quotationTableData => quotationTableData.key}
+                    columns={quotationTableColumns}
+                    dataSource={quotationTableData}
+                />
 
+                {/* Template Drawer */}
                 <Drawer
                     className={scssStyles.rightDrawer}
                     size='large'
                     width='960px'
                     placement='right'
-                    onClose={this.closeTemplateDrawer}
-                    open={this.state.templateDrawerVisible}
+                    onClose={setTemplateSetDrawerVisible.bind(this, false)}
+                    open={templateSetDrawerVisible}
                 >
                     <div>
                         <Table
+                            rowKey={templateTableData => templateTableData.key}
                             rowSelection={{
-                                ...this.templateRowSelection
+                                ...templateRowSelection
                             }}
-                            columns={templateColumns}
-                            dataSource={templateData}
+                            columns={templateTableColumns}
+                            dataSource={quotationTableData[editTemplateIndex]?.template}
                         />
-                        <Button type='primary' onClick={this.clickSaveButtonHandler}>
+                        <Button type='primary' onClick={saveQuotationTemplateSelect}>
                             保存配置
+                        </Button>
+                    </div>
+                </Drawer>
+
+                {/* Add Quotation Drawer */}
+                <Drawer
+                    className={scssStyles.rightDrawer}
+                    size='large'
+                    placement='right'
+                    onClose={setAddQuotationDrawerVisible.bind(this, false)}
+                    open={addQuotationDrawerVisible}
+                >
+                    <div>
+                        <div style={{ marginBottom: '10px' }}>报价单名称</div>
+                        <Input
+                            className={scssStyles.quotationNameInput}
+                            value={addQuotationName}
+                            onChange={handleQuotationInputChange}
+                            placeholder='输入报价单名称'
+                        />
+                        <ConfigItemsGroup onChange={handleQuotationItemsInputChange} />
+                        <Button type='primary' onClick={addQuotationButtonHandler}>
+                            添加报价单
                         </Button>
                     </div>
                 </Drawer>
@@ -264,22 +331,22 @@ export class QuotationTable extends React.Component {
         );
     };
 
-    private renderQuotationEditor = () => {
+    const handleQuotationItemsInputChange = (config: ConfigValue[]) => {
+        configValue = config;
+    };
+
+    const renderQuotationEditor = () => {
         return (
             <div>
                 <Button
                     className={scssStyles.button}
-                    onClick={this.showQuotationTable}
+                    onClick={setContentShownIndex.bind(this, 1)}
                     type='default'
                 >
                     返回
                 </Button>
 
-                <Button
-                    className={scssStyles.button}
-                    onClick={this.clickSaveTemplateButtonHandler}
-                    type='primary'
-                >
+                <Button className={scssStyles.button} type='primary'>
                     保存模板
                 </Button>
 
@@ -288,25 +355,23 @@ export class QuotationTable extends React.Component {
                         styleInfo={{ width: '100%', height: '78vh' }}
                         config={GCD.Spread.Sheets.Designer.DefaultConfig}
                         spreadOptions={{ sheetCount: 2 }}
-                        designerInitialized={this.initDesigner.bind(this)}
+                        designerInitialized={initDesigner}
                     ></Designer>
                 </div>
             </div>
         );
     };
 
-    private renderContent = () => {
-        switch (this.state.contentShownIndex) {
+    const renderContent = () => {
+        switch (contentShownIndex) {
             case 1:
-                return this.renderQuotationTable();
+                return renderQuotationTable();
             case 2:
-                return this.renderQuotationEditor();
+                return renderQuotationEditor();
             default:
-                return this.renderQuotationTable();
+                return renderQuotationTable();
         }
     };
 
-    render() {
-        return this.renderContent();
-    }
-}
+    return renderContent();
+};
