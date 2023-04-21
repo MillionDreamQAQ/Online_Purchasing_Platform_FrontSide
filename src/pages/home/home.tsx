@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar, Button, Layout, Menu, message } from 'antd';
+import { Avatar, Button, Layout, Menu } from 'antd';
 import { UploadOutlined, UserOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import scssStyles from './home.scss';
 import { QuotationTable } from '../../component/quotationTable/quotationTable';
@@ -19,8 +19,6 @@ export class Home extends React.Component<{}, IHomeState> {
     };
 
     componentDidMount(): void {
-        console.log(document.cookie);
-
         if (!document.cookie) {
             window.location.href = '/';
         }

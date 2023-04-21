@@ -15,3 +15,8 @@ export interface IQuotation {
     template: ITemplate[];
     selectedTemplate: ITemplate[];
 }
+
+export interface IUser {
+    id: string;
+    username: string;
+}

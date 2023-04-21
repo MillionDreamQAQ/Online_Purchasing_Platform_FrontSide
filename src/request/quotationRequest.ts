@@ -51,3 +51,20 @@ export async function deleteQuotation(quotationId: string) {
         console.error('Error fetching data:', error);
     }
 }
+
+export async function publishQuotation(quotationId: string, usersId: string[]) {
+    try {
+        const response = await fetch(`${preUrl}/q/publish`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ quotationId, usersId }),
+            credentials: 'include'
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}

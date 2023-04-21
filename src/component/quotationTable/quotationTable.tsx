@@ -13,8 +13,13 @@ import '@grapecity/spread-sheets-designer-resources-cn';
 import * as GCD from '@grapecity/spread-sheets-designer';
 import { Designer } from '@grapecity/spread-sheets-designer-react';
 import scssStyles from './quotationTable.scss';
-import { addQuotation, deleteQuotation, templateSelect } from '@/request/quotationRequest';
-import { IQuotation, ITemplate } from '@/request/model';
+import {
+    addQuotation,
+    deleteQuotation,
+    publishQuotation,
+    templateSelect
+} from '@/request/quotationRequest';
+import { IQuotation, ITemplate, IUser } from '@/request/model';
 import { ConfigItemsGroup } from '../configItemsGroup/configItemsGroup';
 import { findUserById, getAllUserWithoutMe } from '@/request/userRequest';
 
@@ -40,7 +45,7 @@ const templateTableColumns: ColumnsType<ITemplate> = [
 
 export const QuotationTable: FC = () => {
     const [quotationData, setQuotationData] = useState<IQuotation[]>([]);
-    const [userData, setUserData] = useState<any[]>([]);
+    const [userData, setUserData] = useState<IUser[]>([]);
 
     const [contentShownIndex, setContentShownIndex] = useState(1);
 
@@ -50,9 +55,10 @@ export const QuotationTable: FC = () => {
 
     const [editSelectIndex, setEditSelectIndex] = useState(-1);
     const [templateSettingIndex, setTemplateSettingIndex] = useState(-1);
+    const [publishQuotationIndex, setPublishQuotationIndex] = useState(-1);
 
     const [selectTemplate, setSelectTemplate] = useState<ITemplate[]>([]);
-    const [selectUser, setSelectUser] = useState<any[]>([]);
+    const [selectUser, setSelectUser] = useState<IUser[]>([]);
 
     const [addQuotationName, setAddQuotationName] = useState('');
 
@@ -128,6 +134,7 @@ export const QuotationTable: FC = () => {
                         type='primary'
                         onClick={() => {
                             setPublishQuotationDrawerVisible(true);
+                            setPublishQuotationIndex(index);
                         }}
                     >
                         发布报价
@@ -182,7 +189,7 @@ export const QuotationTable: FC = () => {
 
     const templateRowSelection = {
         onChange: (selectedRowKeys: React.Key[], selectedRows: ITemplate[]) => {
-            setSelectTemplate(selectedRows);
+            setSelectTemplate([...selectedRows]);
         },
         defaultSelectedRowKeys: quotationData[templateSettingIndex]?.selectedTemplate?.map(
             ({ key }) => key
@@ -191,7 +198,9 @@ export const QuotationTable: FC = () => {
 
     const userRowSelection = {
         onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
-            setSelectUser(selectedRows);
+            setSelectUser([...selectedRows]);
+
+            console.log(selectedRows);
         }
     };
 
@@ -281,6 +290,48 @@ export const QuotationTable: FC = () => {
         setConfigValue(config);
     };
 
+    const publishQuotationButtonHandler = async () => {
+        if (selectUser.length === 0) {
+            message.error({
+                content: '请选择用户',
+                duration: 1,
+                style: {
+                    marginTop: '50px'
+                }
+            });
+        } else {
+            console.log(quotationData[publishQuotationIndex].id);
+            console.log(selectUser.map(user => user.id));
+
+            const res = await publishQuotation(
+                quotationData[publishQuotationIndex].id,
+                selectUser.map(user => user.id)
+            );
+
+            console.log(res);
+
+            if (res.code === 200) {
+                message.success({
+                    content: '发布成功',
+                    duration: 1,
+                    style: {
+                        marginTop: '50px'
+                    }
+                });
+            } else {
+                message.error({
+                    content: res.msg,
+                    duration: 1,
+                    style: {
+                        marginTop: '50px'
+                    }
+                });
+            }
+
+            setPublishQuotationDrawerVisible(false);
+        }
+    };
+
     const renderQuotationTable = () => {
         return (
             <div>
@@ -364,7 +415,11 @@ export const QuotationTable: FC = () => {
                             columns={userTableColumns}
                             dataSource={userData}
                         ></Table>
-                        <Button style={{ marginTop: '16px' }} type='primary'>
+                        <Button
+                            style={{ marginTop: '16px' }}
+                            type='primary'
+                            onClick={publishQuotationButtonHandler}
+                        >
                             发布报价单
                         </Button>
                     </div>
