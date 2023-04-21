@@ -1,45 +1,39 @@
 import { FC, useState } from 'react';
 import { Button, Input } from 'antd';
 import scssStyles from './configItem.scss';
-
-export interface ConfigValue {
-    key: string;
-    name: string;
-    size: string;
-    unit: string;
-    desc: string;
-}
+import { ITemplate } from '@/request/model';
 
 interface IConfigInputsProps {
     index: number;
-    onChange: (config: ConfigValue) => void;
+    value: ITemplate;
+    onChange: (config: ITemplate) => void;
     onRemove: (index: number) => void;
 }
 
-export const ConfigItems: FC<IConfigInputsProps> = ({ index, onChange, onRemove }) => {
-    const [name, setName] = useState('');
-    const [size, setSize] = useState('');
-    const [unit, setUnit] = useState('');
-    const [desc, setDesc] = useState('');
+export const ConfigItems: FC<IConfigInputsProps> = ({ index, value, onChange, onRemove }) => {
+    const [name, setName] = useState(value.name);
+    const [size, setSize] = useState(value.size);
+    const [unit, setUnit] = useState(value.unit);
+    const [desc, setDesc] = useState(value.desc);
 
     const handleNameChange = e => {
         setName(e.target.value);
-        onChange({ key: Date.now().valueOf().toString(), name: e.target.value, size, unit, desc });
+        onChange({ key: '', count: 0, price: 0, name: e.target.value, size, unit, desc });
     };
 
     const handleSizeChange = e => {
         setSize(e.target.value);
-        onChange({ key: Date.now().valueOf().toString(), name, size: e.target.value, unit, desc });
+        onChange({ key: '', count: 0, price: 0, name, size: e.target.value, unit, desc });
     };
 
     const handleUnitChange = e => {
         setUnit(e.target.value);
-        onChange({ key: Date.now().valueOf().toString(), name, size, unit: e.target.value, desc });
+        onChange({ key: '', count: 0, price: 0, name, size, unit: e.target.value, desc });
     };
 
     const handleDescriptionChange = e => {
         setDesc(e.target.value);
-        onChange({ key: Date.now().valueOf().toString(), name, size, unit, desc: e.target.value });
+        onChange({ key: '', count: 0, price: 0, name, size, unit, desc: e.target.value });
     };
 
     const handleRemoveClick = () => {
@@ -65,27 +59,27 @@ export const ConfigItems: FC<IConfigInputsProps> = ({ index, onChange, onRemove 
                 style={{ width: '35%' }}
                 className={scssStyles.templateInput}
                 placeholder='名称'
-                value={name}
+                value={value.name}
                 onChange={handleNameChange}
             />
             <Input
                 style={{ width: '30%' }}
                 className={scssStyles.templateInput}
                 placeholder='尺寸'
-                value={size}
+                value={value.size}
                 onChange={handleSizeChange}
             />
             <Input
                 style={{ width: '30%' }}
                 placeholder='单位'
-                value={unit}
+                value={value.unit}
                 onChange={handleUnitChange}
             />
             <Input
                 style={{ width: '100%' }}
                 className={scssStyles.templateInput}
                 placeholder='描述'
-                value={desc}
+                value={value.desc}
                 onChange={handleDescriptionChange}
             />
         </div>

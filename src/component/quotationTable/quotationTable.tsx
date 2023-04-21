@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, SetStateAction, useEffect, useState } from 'react';
 import { Button, Drawer, Input, Space, Table, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import * as GC from '@grapecity/spread-sheets';
@@ -13,15 +13,10 @@ import '@grapecity/spread-sheets-designer-resources-cn';
 import * as GCD from '@grapecity/spread-sheets-designer';
 import { Designer } from '@grapecity/spread-sheets-designer-react';
 import scssStyles from './quotationTable.scss';
-import {
-    addQuotation,
-    deleteQuotation,
-    getAllQuotations,
-    templateSelect
-} from '@/request/quotationRequest';
+import { addQuotation, deleteQuotation, templateSelect } from '@/request/quotationRequest';
 import { IQuotation, ITemplate } from '@/request/model';
-import { ConfigItems, ConfigValue } from '../configItem/configItem';
 import { ConfigItemsGroup } from '../configItemsGroup/configItemsGroup';
+import { findUserById } from '@/request/userRequest';
 
 const templateTableColumns: ColumnsType<ITemplate> = [
     {
@@ -57,8 +52,9 @@ export const QuotationTable: FC = () => {
     const [selectTemplate, setSelectTemplate] = useState<ITemplate[]>([]);
     const [addQuotationName, setAddQuotationName] = useState('');
 
+    const [configValue, setConfigValue] = useState<ITemplate[]>([]);
+
     let designer: GCD.Spread.Sheets.Designer.Designer;
-    let configValue = [] as ConfigValue[];
 
     useEffect(() => {
         async function fetchData() {
@@ -68,19 +64,22 @@ export const QuotationTable: FC = () => {
     }, []);
 
     const refreshQuotations = async () => {
-        const res = await getAllQuotations();
+        const res = await findUserById();
 
-        const quotations = res.data.map(({ quotationName, template, key, selectedTemplate }) => ({
-            key,
-            quotationName,
-            template,
-            selectedTemplate
-        }));
+        const quotations = res.result.quotations.map(
+            ({ _id, quotationName, template, key, selectedTemplate }) => ({
+                id: _id,
+                key,
+                quotationName,
+                template,
+                selectedTemplate
+            })
+        );
 
         setQuotationData(quotations);
     };
 
-    const handleQuotationInputChange = e => {
+    const handleQuotationInputChange = (e: { target: { value: SetStateAction<string> } }) => {
         setAddQuotationName(e.target.value);
     };
 
@@ -112,16 +111,14 @@ export const QuotationTable: FC = () => {
                             setEditSelectIndex(index);
                         }}
                     >
-                        编辑
+                        预览
                     </Button>
                     <Button type='primary'>发布报价</Button>
                     <Button
                         type='primary'
                         danger
                         onClick={async () => {
-                            const deleteRes = await deleteQuotation(
-                                quotationData[index].quotationName
-                            );
+                            const deleteRes = await deleteQuotation(quotationData[index].id);
 
                             if (deleteRes.code === 200) {
                                 message.success({
@@ -170,14 +167,30 @@ export const QuotationTable: FC = () => {
                 }
             });
         } else {
+            for (const config of configValue) {
+                if (config.name === '') {
+                    message.error({
+                        content: '配置项名称不能为空',
+                        duration: 1,
+                        style: {
+                            marginTop: '50px'
+                        }
+                    });
+                    return;
+                }
+            }
+
             const addResponse = await addQuotation({
-                key: Date.now().valueOf().toString(),
+                id: '',
+                key: '',
                 quotationName: addQuotationName,
                 template: configValue,
                 selectedTemplate: []
             });
 
             if (addResponse.code === 200) {
+                setAddQuotationName('');
+
                 message.success({
                     content: '报价单添加成功',
                     duration: 1,
@@ -201,8 +214,8 @@ export const QuotationTable: FC = () => {
 
     const saveQuotationTemplateSelect = async () => {
         const res = await templateSelect(
-            quotationData[templateSettingIndex].quotationName,
-            selectTemplate
+            quotationData[templateSettingIndex].id,
+            selectTemplate.map(template => template.key)
         );
 
         if (res.code === 200) {
@@ -226,23 +239,21 @@ export const QuotationTable: FC = () => {
         await refreshQuotations();
     };
 
+    const handleQuotationItemsInputChange = (config: ITemplate[]) => {
+        setConfigValue(config);
+    };
+
     const renderQuotationTable = () => {
         return (
             <div>
                 <Button
                     className={scssStyles.button}
-                    onClick={setAddQuotationDrawerVisible.bind(this, true)}
+                    onClick={() => {
+                        setAddQuotationDrawerVisible(true);
+                    }}
                     type='primary'
                 >
                     添加报价单
-                </Button>
-
-                <Button className={scssStyles.button} type='primary'>
-                    导入报价单
-                </Button>
-
-                <Button className={scssStyles.button} type='primary'>
-                    导出报价单
                 </Button>
 
                 <Table
@@ -301,10 +312,6 @@ export const QuotationTable: FC = () => {
         );
     };
 
-    const handleQuotationItemsInputChange = (config: ConfigValue[]) => {
-        configValue = config;
-    };
-
     const renderQuotationEditor = () => {
         return (
             <div>
@@ -314,10 +321,6 @@ export const QuotationTable: FC = () => {
                     type='default'
                 >
                     返回
-                </Button>
-
-                <Button className={scssStyles.button} type='primary'>
-                    保存模板
                 </Button>
 
                 <div className={scssStyles.quotationEditor}>
@@ -345,57 +348,69 @@ export const QuotationTable: FC = () => {
         sheet.suspendPaint();
 
         const data = quotationData[editSelectIndex];
-        const designerColumns = ['名称', '规格', '数量', '单价', '单位', '报价清单'];
-        const { quotationName, selectedTemplate } = data;
-        if (quotationName) {
-            sheet.addSpan(0, 0, 1, designerColumns.length, GC.Spread.Sheets.SheetArea.viewport);
-            sheet.getCell(0, 0, GC.Spread.Sheets.SheetArea.viewport).font('bold 20px 微软雅黑');
-            sheet.setValue(0, 0, quotationName);
-        }
+        const { selectedTemplate } = data;
 
-        designerColumns.forEach((item, index) => {
-            sheet.setValue(1, index, item);
+        const dataSource = new GC.Spread.Sheets.Bindings.CellBindingSource(data);
+        sheet.setDataSource(dataSource);
 
-            const currentCell = sheet.getCell(1, index, GC.Spread.Sheets.SheetArea.viewport);
-            currentCell.backColor('#5c9ad2');
-            currentCell.foreColor('#fff');
-        });
+        const bindingPathCellType = new BindingPathCellType();
+        sheet
+            .getCell(0, 0)
+            .bindingPath('quotationName')
+            .cellType(bindingPathCellType)
+            .vAlign(GC.Spread.Sheets.VerticalAlign.center);
 
-        if (selectedTemplate) {
-            selectedTemplate.forEach((item, index) => {
-                sheet.setValue(index + 2, 0, item.name);
-                sheet.setValue(index + 2, 1, item.size);
-                sheet.setValue(index + 2, 2, 1);
-                sheet.setValue(index + 2, 3, '');
-                sheet.setValue(index + 2, 4, item.unit);
-                sheet.setValue(index + 2, 5, item.desc);
-
-                const currentRow = sheet.getRange(index + 2, 0, 1, designerColumns.length);
-                if (index % 2 === 0) {
-                    currentRow.backColor('#dbeaf6');
-                } else {
-                    currentRow.backColor('#fff');
-                }
-            });
-        }
-
-        const all = sheet.getRange(
+        const table = sheet.tables.add(
+            'quotationsTable',
+            1,
             0,
-            0,
-            2 + (selectedTemplate ? selectedTemplate.length : 0),
-            designerColumns.length
+            selectedTemplate.length,
+            6,
+            GC.Spread.Sheets.Tables.TableThemes.light1
         );
+
+        const tableColumn1 = new GC.Spread.Sheets.Tables.TableColumn(0, 'name', '名称');
+        const tableColumn2 = new GC.Spread.Sheets.Tables.TableColumn(1, 'size', '规格');
+        const tableColumn3 = new GC.Spread.Sheets.Tables.TableColumn(2, 'count', '数量');
+        const tableColumn4 = new GC.Spread.Sheets.Tables.TableColumn(3, 'price', '单价');
+        const tableColumn5 = new GC.Spread.Sheets.Tables.TableColumn(4, 'unit', '单位');
+        const tableColumn6 = new GC.Spread.Sheets.Tables.TableColumn(5, 'desc', '报价清单');
+
+        table.bindColumns([
+            tableColumn1,
+            tableColumn2,
+            tableColumn3,
+            tableColumn4,
+            tableColumn5,
+            tableColumn6
+        ]);
+
+        table.autoGenerateColumns(false);
+
+        table.bindingPath('selectedTemplate');
+
+        sheet.setColumnWidth(0, 100);
+        sheet.setColumnWidth(1, 100);
+        sheet.setColumnWidth(2, 100);
+        sheet.setColumnWidth(3, 100);
+        sheet.setColumnWidth(4, 100);
+        sheet.setColumnWidth(5, 300);
+
+        sheet.setRowHeight(0, 40);
+        sheet.setRowHeight(1, 40);
+        for (let i = 0; i < selectedTemplate.length; i++) {
+            sheet.setRowHeight(i + 2, 30);
+        }
+
+        sheet.addSpan(0, 0, 1, 6, GC.Spread.Sheets.SheetArea.viewport);
+        sheet
+            .getCell(0, 0, GC.Spread.Sheets.SheetArea.viewport)
+            .font('bold 20px 微软雅黑')
+            .hAlign(GC.Spread.Sheets.HorizontalAlign.center);
+
+        const all = sheet.getRange(0, 0, 2 + (selectedTemplate ? selectedTemplate.length : 0), 7);
         all.hAlign(GC.Spread.Sheets.HorizontalAlign.center);
         all.vAlign(GC.Spread.Sheets.VerticalAlign.center);
-
-        for (let i = 0; i < designerColumns.length; i++) {
-            sheet.autoFitColumn(i);
-            sheet.setColumnWidth(i, sheet.getColumnWidth(i) + 20);
-        }
-
-        for (let i = 0; i < (selectedTemplate ? selectedTemplate.length : 0) + 2; i++) {
-            sheet.setRowHeight(i, sheet.getRowHeight(i) + 20);
-        }
 
         sheet.resumePaint();
     };
@@ -413,3 +428,29 @@ export const QuotationTable: FC = () => {
 
     return renderContent();
 };
+
+class BindingPathCellType extends GC.Spread.Sheets.CellTypes.Text {
+    paint(
+        ctx: CanvasRenderingContext2D,
+        value: string | null | undefined,
+        x: number,
+        y: number,
+        w: number,
+        h: number,
+        style: GC.Spread.Sheets.Style,
+        context: { row?: any; col?: any; sheet?: any }
+    ) {
+        if (value === null || value === undefined) {
+            const { sheet } = context;
+            const { row } = context;
+            const { col } = context;
+            if (sheet && (row === 0 || !!row) && (col === 0 || !!col)) {
+                const bindingPath = sheet.getBindingPath(context.row, context.col);
+                if (bindingPath) {
+                    value = `[${bindingPath}]`;
+                }
+            }
+        }
+        super.paint(ctx, value, x, y, w, h, style, context);
+    }
+}

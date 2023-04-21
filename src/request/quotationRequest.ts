@@ -1,25 +1,16 @@
-import { IQuotation, ITemplate } from './model';
+import { IQuotation } from './model';
 
 const preUrl = 'http://localhost:3000';
 
-export async function getAllQuotations() {
-    try {
-        const response = await fetch(`${preUrl}/quotations/list`);
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching data:', error);
-    }
-}
-
 export async function addQuotation(quotation: IQuotation) {
     try {
-        const response = await fetch(`${preUrl}/quotations/add`, {
+        const response = await fetch(`${preUrl}/q/add`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(quotation)
+            body: JSON.stringify(quotation),
+            credentials: 'include'
         });
         const data = await response.json();
         return data;
@@ -28,14 +19,14 @@ export async function addQuotation(quotation: IQuotation) {
     }
 }
 
-export async function templateSelect(quotationName: string, selectedTemplate: ITemplate[]) {
+export async function templateSelect(quotationId: string, selectedTemplateKey: string[]) {
     try {
-        const response = await fetch(`${preUrl}/quotations/templateSelect`, {
+        const response = await fetch(`${preUrl}/q/setSelectedTemplate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ quotationName, selectedTemplate })
+            body: JSON.stringify({ quotationId, selectedTemplateKey })
         });
         const data = await response.json();
         return data;
@@ -44,14 +35,15 @@ export async function templateSelect(quotationName: string, selectedTemplate: IT
     }
 }
 
-export async function deleteQuotation(quotationName: string) {
+export async function deleteQuotation(quotationId: string) {
     try {
-        const response = await fetch(`${preUrl}/quotations/delete`, {
+        const response = await fetch(`${preUrl}/q/delete`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ quotationName })
+            body: JSON.stringify({ quotationId }),
+            credentials: 'include'
         });
         const data = await response.json();
         return data;

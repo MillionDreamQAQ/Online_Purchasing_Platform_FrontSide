@@ -2,7 +2,7 @@ const preUrl = 'http://localhost:3000';
 
 export async function loginUser(username: string, password: string) {
     try {
-        const response = await fetch(`${preUrl}/users/login`, {
+        const response = await fetch(`${preUrl}/u/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -19,7 +19,7 @@ export async function loginUser(username: string, password: string) {
 
 export async function registerUser(username: string, password: string) {
     try {
-        const response = await fetch(`${preUrl}/users/register`, {
+        const response = await fetch(`${preUrl}/u/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -30,5 +30,17 @@ export async function registerUser(username: string, password: string) {
         return data;
     } catch (error) {
         console.error('Error registering user:', error);
+    }
+}
+
+export async function findUserById() {
+    try {
+        const response = await fetch(`${preUrl}/u/findById`, {
+            credentials: 'include'
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error finding user by id:', error);
     }
 }
