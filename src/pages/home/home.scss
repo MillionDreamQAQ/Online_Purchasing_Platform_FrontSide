@@ -22,9 +22,16 @@ body {
 .header {
     padding: 0;
     background: #fff;
-    padding-left: 20px;
+    padding-left: 30px;
     font-size: 32px;
     font-weight: 600;
+
+    .user {
+        float: right;
+        margin-right: 20px;
+        font-size: 16px;
+        font-weight: 400;
+    }
 }
 
 .contentContainer {

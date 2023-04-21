@@ -16,7 +16,7 @@ import scssStyles from './quotationTable.scss';
 import { addQuotation, deleteQuotation, templateSelect } from '@/request/quotationRequest';
 import { IQuotation, ITemplate } from '@/request/model';
 import { ConfigItemsGroup } from '../configItemsGroup/configItemsGroup';
-import { findUserById } from '@/request/userRequest';
+import { findUserById, getAllUserWithoutMe } from '@/request/userRequest';
 
 const templateTableColumns: ColumnsType<ITemplate> = [
     {
@@ -40,16 +40,20 @@ const templateTableColumns: ColumnsType<ITemplate> = [
 
 export const QuotationTable: FC = () => {
     const [quotationData, setQuotationData] = useState<IQuotation[]>([]);
+    const [userData, setUserData] = useState<any[]>([]);
 
     const [contentShownIndex, setContentShownIndex] = useState(1);
 
     const [addQuotationDrawerVisible, setAddQuotationDrawerVisible] = useState(false);
     const [templateSettingDrawerVisible, setTemplateSettingDrawerVisible] = useState(false);
+    const [publishQuotationDrawerVisible, setPublishQuotationDrawerVisible] = useState(false);
 
     const [editSelectIndex, setEditSelectIndex] = useState(-1);
     const [templateSettingIndex, setTemplateSettingIndex] = useState(-1);
 
     const [selectTemplate, setSelectTemplate] = useState<ITemplate[]>([]);
+    const [selectUser, setSelectUser] = useState<any[]>([]);
+
     const [addQuotationName, setAddQuotationName] = useState('');
 
     const [configValue, setConfigValue] = useState<ITemplate[]>([]);
@@ -59,6 +63,7 @@ export const QuotationTable: FC = () => {
     useEffect(() => {
         async function fetchData() {
             await refreshQuotations();
+            await getUsersList();
         }
         fetchData();
     }, []);
@@ -77,6 +82,12 @@ export const QuotationTable: FC = () => {
         );
 
         setQuotationData(quotations);
+    };
+
+    const getUsersList = async () => {
+        const res = await getAllUserWithoutMe();
+
+        setUserData(res.users.map(({ _id, username }) => ({ id: _id, username })));
     };
 
     const handleQuotationInputChange = (e: { target: { value: SetStateAction<string> } }) => {
@@ -113,7 +124,14 @@ export const QuotationTable: FC = () => {
                     >
                         预览
                     </Button>
-                    <Button type='primary'>发布报价</Button>
+                    <Button
+                        type='primary'
+                        onClick={() => {
+                            setPublishQuotationDrawerVisible(true);
+                        }}
+                    >
+                        发布报价
+                    </Button>
                     <Button
                         type='primary'
                         danger
@@ -148,6 +166,20 @@ export const QuotationTable: FC = () => {
         }
     ];
 
+    const userTableColumns: ColumnsType<any> = [
+        {
+            title: '用户名',
+            dataIndex: 'username',
+            filters: userData.map(({ username }) => ({ text: username, value: username })),
+            filterMode: 'tree',
+            filterSearch: true,
+            onFilter(value, record) {
+                return record.username.indexOf(value) === 0;
+            },
+            render: (text: string) => <a>{text}</a>
+        }
+    ];
+
     const templateRowSelection = {
         onChange: (selectedRowKeys: React.Key[], selectedRows: ITemplate[]) => {
             setSelectTemplate(selectedRows);
@@ -155,6 +187,12 @@ export const QuotationTable: FC = () => {
         defaultSelectedRowKeys: quotationData[templateSettingIndex]?.selectedTemplate?.map(
             ({ key }) => key
         )
+    };
+
+    const userRowSelection = {
+        onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
+            setSelectUser(selectedRows);
+        }
     };
 
     const addQuotationButtonHandler = async () => {
@@ -305,6 +343,29 @@ export const QuotationTable: FC = () => {
                         <ConfigItemsGroup onChange={handleQuotationItemsInputChange} />
                         <Button type='primary' onClick={addQuotationButtonHandler}>
                             添加报价单
+                        </Button>
+                    </div>
+                </Drawer>
+
+                {/* Publish Quotation */}
+                <Drawer
+                    className={scssStyles.rightDrawer}
+                    size='default'
+                    placement='right'
+                    onClose={setPublishQuotationDrawerVisible.bind(this, false)}
+                    open={publishQuotationDrawerVisible}
+                >
+                    <div>
+                        <Table
+                            rowKey={userData => userData.id}
+                            rowSelection={{
+                                ...userRowSelection
+                            }}
+                            columns={userTableColumns}
+                            dataSource={userData}
+                        ></Table>
+                        <Button style={{ marginTop: '16px' }} type='primary'>
+                            发布报价单
                         </Button>
                     </div>
                 </Drawer>

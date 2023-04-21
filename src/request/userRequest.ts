@@ -44,3 +44,27 @@ export async function findUserById() {
         console.error('Error finding user by id:', error);
     }
 }
+
+export async function logout() {
+    try {
+        const response = await fetch(`${preUrl}/u/logout`, {
+            credentials: 'include'
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error finding user by id:', error);
+    }
+}
+
+export async function getAllUserWithoutMe() {
+    try {
+        const response = await fetch(`${preUrl}/u/listWithoutMe`, {
+            credentials: 'include'
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error finding user by id:', error);
+    }
+}

@@ -1,8 +1,9 @@
 import React from 'react';
-import { Layout, Menu } from 'antd';
+import { Avatar, Button, Layout, Menu, message } from 'antd';
 import { UploadOutlined, UserOutlined, VideoCameraOutlined } from '@ant-design/icons';
 import scssStyles from './home.scss';
 import { QuotationTable } from '../../component/quotationTable/quotationTable';
+import { logout } from '@/request/userRequest';
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -16,6 +17,14 @@ export class Home extends React.Component<{}, IHomeState> {
     state = {
         menuSelectedIndex: 1
     };
+
+    componentDidMount(): void {
+        console.log(document.cookie);
+
+        if (!document.cookie) {
+            window.location.href = '/';
+        }
+    }
 
     private menuOnSelect = (e: { key: any }) => {
         this.setState({
@@ -33,6 +42,14 @@ export class Home extends React.Component<{}, IHomeState> {
                 return <div>比价</div>;
             default:
                 return <QuotationTable />;
+        }
+    };
+
+    private changeUser = async () => {
+        const logoutRes = await logout();
+
+        if (logoutRes.code === 200) {
+            window.location.href = '/';
         }
     };
 
@@ -57,7 +74,24 @@ export class Home extends React.Component<{}, IHomeState> {
                     />
                 </Sider>
                 <Layout>
-                    <Header className={scssStyles.header}>在线采购管理系统</Header>
+                    <Header className={scssStyles.header}>
+                        在线采购管理系统
+                        <div className={scssStyles.user}>
+                            <Avatar
+                                style={{ backgroundColor: '#f56a00', verticalAlign: 'middle' }}
+                                size='large'
+                            >
+                                {document.cookie.split('=')[1]}
+                            </Avatar>
+                            <Button
+                                size='small'
+                                style={{ margin: '0 16px', verticalAlign: 'middle' }}
+                                onClick={this.changeUser}
+                            >
+                                切换用户
+                            </Button>
+                        </div>
+                    </Header>
                     <Content className={scssStyles.contentContainer}>
                         <div className={scssStyles.content}>{this.renderContent()}</div>
                     </Content>
