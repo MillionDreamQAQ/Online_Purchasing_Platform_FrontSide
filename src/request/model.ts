@@ -8,6 +8,22 @@ export interface ITemplate {
     desc: string;
 }
 
+export interface IReceivedQuotation {
+    id: string;
+    key: string;
+    receiver: IUser;
+    publisher: IUser;
+    quotation: IQuotation;
+}
+
+export interface IFinishedQuotation {
+    id: string;
+    key: string;
+    receiver: IUser;
+    publisher: IUser;
+    quotation: IQuotation;
+}
+
 export interface IQuotation {
     id: string;
     key: string;

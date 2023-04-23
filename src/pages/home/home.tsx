@@ -4,6 +4,8 @@ import { UploadOutlined, UserOutlined, VideoCameraOutlined } from '@ant-design/i
 import scssStyles from './home.scss';
 import { QuotationTable } from '../../component/quotationTable/quotationTable';
 import { logout } from '@/request/userRequest';
+import { ReceivedQuotationTable } from '@/component/receivedQuotationTable/receivedQuotationTable';
+import { PublishedQuotationTable } from '@/component/publishedQuotationTable/publishedQuotationTable';
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -35,9 +37,9 @@ export class Home extends React.Component<{}, IHomeState> {
             case 1:
                 return <QuotationTable />;
             case 2:
-                return <div>供应商报价</div>;
+                return <ReceivedQuotationTable />;
             case 3:
-                return <div>比价</div>;
+                return <PublishedQuotationTable />;
             default:
                 return <QuotationTable />;
         }

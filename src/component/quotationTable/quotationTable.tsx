@@ -22,6 +22,7 @@ import {
 import { IQuotation, ITemplate, IUser } from '@/request/model';
 import { ConfigItemsGroup } from '../configItemsGroup/configItemsGroup';
 import { findUserById, getAllUserWithoutMe } from '@/request/userRequest';
+import { BindingPathCellType } from '@/utils/bindingPathCellType';
 
 const templateTableColumns: ColumnsType<ITemplate> = [
     {
@@ -77,17 +78,30 @@ export const QuotationTable: FC = () => {
     const refreshQuotations = async () => {
         const res = await findUserById();
 
-        const quotations = res.result.quotations.map(
-            ({ _id, quotationName, template, key, selectedTemplate }) => ({
-                id: _id,
-                key,
-                quotationName,
-                template,
-                selectedTemplate
-            })
-        );
+        if (res.code !== 200) {
+            message.error({
+                content: res.msg,
+                duration: 1,
+                style: {
+                    marginTop: '50px'
+                },
+                onClose: () => {
+                    window.location.href = '/';
+                }
+            });
+        } else {
+            const quotations = res.result.quotations.map(
+                ({ _id, quotationName, template, key, selectedTemplate }) => ({
+                    id: _id,
+                    key,
+                    quotationName,
+                    template,
+                    selectedTemplate
+                })
+            );
 
-        setQuotationData(quotations);
+            setQuotationData(quotations);
+        }
     };
 
     const getUsersList = async () => {
@@ -300,15 +314,10 @@ export const QuotationTable: FC = () => {
                 }
             });
         } else {
-            console.log(quotationData[publishQuotationIndex].id);
-            console.log(selectUser.map(user => user.id));
-
             const res = await publishQuotation(
                 quotationData[publishQuotationIndex].id,
                 selectUser.map(user => user.id)
             );
-
-            console.log(res);
 
             if (res.code === 200) {
                 message.success({
@@ -428,7 +437,7 @@ export const QuotationTable: FC = () => {
         );
     };
 
-    const renderQuotationEditor = () => {
+    const renderQuotationDesigner = () => {
         return (
             <div>
                 <Button
@@ -536,7 +545,7 @@ export const QuotationTable: FC = () => {
             case 1:
                 return renderQuotationTable();
             case 2:
-                return renderQuotationEditor();
+                return renderQuotationDesigner();
             default:
                 return renderQuotationTable();
         }
@@ -544,29 +553,3 @@ export const QuotationTable: FC = () => {
 
     return renderContent();
 };
-
-class BindingPathCellType extends GC.Spread.Sheets.CellTypes.Text {
-    paint(
-        ctx: CanvasRenderingContext2D,
-        value: string | null | undefined,
-        x: number,
-        y: number,
-        w: number,
-        h: number,
-        style: GC.Spread.Sheets.Style,
-        context: { row?: any; col?: any; sheet?: any }
-    ) {
-        if (value === null || value === undefined) {
-            const { sheet } = context;
-            const { row } = context;
-            const { col } = context;
-            if (sheet && (row === 0 || !!row) && (col === 0 || !!col)) {
-                const bindingPath = sheet.getBindingPath(context.row, context.col);
-                if (bindingPath) {
-                    value = `[${bindingPath}]`;
-                }
-            }
-        }
-        super.paint(ctx, value, x, y, w, h, style, context);
-    }
-}
