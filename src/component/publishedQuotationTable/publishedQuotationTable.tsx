@@ -228,11 +228,9 @@ export const PublishedQuotationTable: FC = () => {
 
         quotationsTable.bindingPath('quotations.0.quotation.selectedTemplate');
 
-        sheet.setColumnWidth(0, 100);
-        sheet.setColumnWidth(1, 100);
-        sheet.setColumnWidth(2, 100);
-        sheet.setColumnWidth(3, 100);
-        sheet.setColumnWidth(4, 300);
+        for (let i = 0; i < 5; i++) {
+            sheet.setColumnWidth(i, 100);
+        }
 
         // render compare table
         for (let i = 0; i < selectedTemplate.length; i++) {
