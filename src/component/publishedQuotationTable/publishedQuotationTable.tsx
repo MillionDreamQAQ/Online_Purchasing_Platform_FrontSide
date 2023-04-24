@@ -16,6 +16,16 @@ import { findUserById } from '@/request/userRequest';
 import { IFinishedQuotation } from '@/request/model';
 import scssStyles from './publishedQuotationTable.scss';
 import { BindingPathCellType } from '@/utils/bindingPathCellType';
+import { templateSelect } from '@/request/quotationRequest';
+import { numberToLetter } from '@/utils/helper';
+import {
+    addChart,
+    changColumnChartDataLabels,
+    changeChartSeriesColor,
+    changeChartSeriesGapWidthAndOverLap,
+    changeChartTitle,
+    changeSeries
+} from '@/utils/chart';
 
 interface IGroupQuotation {
     groupQuotation: IGroupQuotationItem[];
@@ -27,7 +37,6 @@ interface IGroupQuotationItem {
 }
 
 export const PublishedQuotationTable: FC = () => {
-    const [publishedQuotation, setPublishedQuotation] = useState<IFinishedQuotation[]>([]);
     const [groupPublishedQuotation, setGroupPublishedQuotation] = useState<IGroupQuotationItem[]>(
         []
     );
@@ -88,10 +97,6 @@ export const PublishedQuotationTable: FC = () => {
                 groupedQuotations
             ).map(k => groupedQuotations[k]);
 
-            console.log(finishedQuotations);
-            console.log(groupPublishedQuotation);
-
-            setPublishedQuotation(finishedQuotations);
             setGroupPublishedQuotation(groupPublishedQuotation);
         }
     };
@@ -158,7 +163,7 @@ export const PublishedQuotationTable: FC = () => {
                     <Designer
                         styleInfo={{ width: '100%', height: '78vh' }}
                         config={GCD.Spread.Sheets.Designer.DefaultConfig}
-                        spreadOptions={{ sheetCount: 2 }}
+                        spreadOptions={{ sheetCount: 1 }}
                         designerInitialized={initDesigner}
                     ></Designer>
                 </div>
@@ -181,8 +186,6 @@ export const PublishedQuotationTable: FC = () => {
         const data = groupPublishedQuotation[editSelectIndex];
         const { selectedTemplate } = data.quotations[0].quotation;
 
-        console.log('renderData', data);
-
         // bind data source
         const dataSource = new GC.Spread.Sheets.Bindings.CellBindingSource(data);
         sheet.setDataSource(dataSource);
@@ -201,7 +204,7 @@ export const PublishedQuotationTable: FC = () => {
             'quotationsTable',
             2,
             0,
-            selectedTemplate.length,
+            selectedTemplate.length === 0 ? 1 : selectedTemplate.length,
             5,
             GC.Spread.Sheets.Tables.TableThemes.light1
         );
@@ -229,10 +232,16 @@ export const PublishedQuotationTable: FC = () => {
         quotationsTable.bindingPath('quotations.0.quotation.selectedTemplate');
 
         for (let i = 0; i < 5; i++) {
+            if (i === 4) {
+                sheet.setColumnWidth(i, 300);
+                break;
+            }
             sheet.setColumnWidth(i, 100);
         }
 
         // render compare table
+        const cfs = sheet.conditionalFormats;
+
         for (let i = 0; i < selectedTemplate.length; i++) {
             const compareTable = sheet.tables.add(
                 `compareTable${i}`,
@@ -250,15 +259,54 @@ export const PublishedQuotationTable: FC = () => {
             );
 
             compareTable.autoGenerateColumns(false);
-
             compareTable.bindColumns([compareTableColumn]);
-
             compareTable.bindingPath(`quotations.${i}.quotation.selectedTemplate`);
+        }
+
+        for (let i = 0; i < selectedTemplate.length; i++) {
+            cfs.add2ScaleRule(
+                GC.Spread.Sheets.ConditionalFormatting.ScaleValueType.lowestValue,
+                0,
+                'green',
+                GC.Spread.Sheets.ConditionalFormatting.ScaleValueType.highestValue,
+                Number.MAX_SAFE_INTEGER,
+                'red',
+                [new GC.Spread.Sheets.Range(3 + i, 5, 1, selectedTemplate.length)]
+            );
         }
 
         for (let i = 0; i < data.quotations.length; i++) {
             sheet.setColumnWidth(5 + i, 100);
         }
+
+        // render total at last column
+        sheet.addSpan(3 + templateSelect.length, 0, 1, 5, GC.Spread.Sheets.SheetArea.viewport);
+        sheet.getRange(3 + templateSelect.length, 0, 1, 5).backColor('#f0f0f0');
+        sheet
+            .getCell(3 + templateSelect.length, 0, GC.Spread.Sheets.SheetArea.viewport)
+            .value('汇总')
+            .font('bold 15px 微软雅黑')
+            .hAlign(GC.Spread.Sheets.HorizontalAlign.center)
+            .vAlign(GC.Spread.Sheets.VerticalAlign.center);
+        for (let i = 0; i < selectedTemplate.length; i++) {
+            sheet
+                .getRange(3 + selectedTemplate.length, 5 + i, 1, 1)
+                .formula(
+                    `SUM(${numberToLetter(6 + i)}4:${numberToLetter(6 + i)}${
+                        selectedTemplate.length + 3
+                    })`
+                );
+        }
+
+        cfs.add2ScaleRule(
+            GC.Spread.Sheets.ConditionalFormatting.ScaleValueType.lowestValue,
+            0,
+            'green',
+            GC.Spread.Sheets.ConditionalFormatting.ScaleValueType.highestValue,
+            Number.MAX_SAFE_INTEGER,
+            'red',
+            [new GC.Spread.Sheets.Range(3 + selectedTemplate.length, 5, 1, selectedTemplate.length)]
+        );
 
         // set row height
         sheet.setRowHeight(0, 40);
@@ -267,6 +315,7 @@ export const PublishedQuotationTable: FC = () => {
         for (let i = 0; i < selectedTemplate.length; i++) {
             sheet.setRowHeight(i + 3, 30);
         }
+        sheet.setRowHeight(3 + selectedTemplate.length, 30);
 
         // set span and style
         sheet.addSpan(0, 0, 1, 5 + data.quotations.length, GC.Spread.Sheets.SheetArea.viewport);
@@ -290,9 +339,73 @@ export const PublishedQuotationTable: FC = () => {
             .hAlign(GC.Spread.Sheets.HorizontalAlign.center);
 
         // set all style
-        const all = sheet.getRange(0, 0, 3 + (selectedTemplate ? selectedTemplate.length : 0), 7);
+        const all = sheet.getRange(0, 0, 4 + (selectedTemplate ? selectedTemplate.length : 0), 7);
         all.hAlign(GC.Spread.Sheets.HorizontalAlign.center);
         all.vAlign(GC.Spread.Sheets.VerticalAlign.center);
+
+        // add chart
+        const chartType = [
+            {
+                type: GC.Spread.Sheets.Charts.ChartType.columnClustered,
+                desc: 'column',
+                dataFormula: `F3:${numberToLetter(5 + data.quotations.length)}${
+                    4 + selectedTemplate.length
+                }`,
+                changeStyle(chart, length) {
+                    chart.axes({ primaryValue: { title: { text: '价格 (RMB)' } } });
+                    chart.switchDataOrientation(true);
+                    changeChartTitle(chart, '柱状报价对比图');
+                    changColumnChartDataLabels(chart);
+                    changeChartSeriesColor(chart);
+                    changeChartSeriesGapWidthAndOverLap(chart);
+                    changeSeries(chart, length);
+                }
+            },
+            {
+                type: GC.Spread.Sheets.Charts.ChartType.lineStacked,
+                desc: 'column',
+                dataFormula: `F3:${numberToLetter(5 + data.quotations.length)}${
+                    4 + selectedTemplate.length
+                }`,
+                changeStyle(chart, length) {
+                    chart.axes({ primaryValue: { title: { text: '价格 (RMB)' } } });
+                    chart.switchDataOrientation(true);
+                    changeChartTitle(chart, '折线报价对比图');
+                    changColumnChartDataLabels(chart);
+                    changeChartSeriesColor(chart);
+                    changeChartSeriesGapWidthAndOverLap(chart);
+                    changeSeries(chart, length);
+                }
+            },
+            {
+                type: GC.Spread.Sheets.Charts.ChartType.barClustered,
+                desc: 'bar',
+                dataFormula: `F3:${numberToLetter(5 + data.quotations.length)}${
+                    4 + selectedTemplate.length
+                }`,
+                changeStyle(chart, length) {
+                    chart.legend({ position: GC.Spread.Sheets.Charts.LegendPosition.right });
+                    chart.axes({ primaryValue: { title: { text: '价格 (RMB)' } } });
+                    chart.switchDataOrientation(true);
+                    changeChartTitle(chart, '条状报价对比图');
+                    changColumnChartDataLabels(chart);
+                    changeChartSeriesColor(chart);
+                    changeChartSeriesGapWidthAndOverLap(chart);
+                    changeSeries(chart, length);
+                }
+            }
+        ];
+        for (let i = 0; i < chartType.length; i++) {
+            const chart = addChart(
+                sheet,
+                0,
+                140 + selectedTemplate.length * 30 + i * 450 + 50,
+                chartType[i].type,
+                chartType[i].dataFormula,
+                i
+            );
+            chartType[i].changeStyle(chart, selectedTemplate.length);
+        }
 
         sheet.resumePaint();
     };

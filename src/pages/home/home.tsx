@@ -7,7 +7,7 @@ import { logout } from '@/request/userRequest';
 import { ReceivedQuotationTable } from '@/component/receivedQuotationTable/receivedQuotationTable';
 import { PublishedQuotationTable } from '@/component/publishedQuotationTable/publishedQuotationTable';
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content, Sider } = Layout;
 
 const MenuLabel = ['报价模板管理', '供应商报价', '比价'];
 
@@ -95,7 +95,6 @@ export class Home extends React.Component<{}, IHomeState> {
                     <Content className={scssStyles.contentContainer}>
                         <div className={scssStyles.content}>{this.renderContent()}</div>
                     </Content>
-                    <Footer className={scssStyles.footer}>@ Dream</Footer>
                 </Layout>
             </Layout>
         );

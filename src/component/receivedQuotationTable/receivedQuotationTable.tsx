@@ -184,7 +184,7 @@ export const ReceivedQuotationTable: FC = () => {
                     <Designer
                         styleInfo={{ width: '100%', height: '78vh' }}
                         config={GCD.Spread.Sheets.Designer.DefaultConfig}
-                        spreadOptions={{ sheetCount: 2 }}
+                        spreadOptions={{ sheetCount: 1 }}
                         designerInitialized={initDesigner}
                     ></Designer>
                 </div>
@@ -221,7 +221,7 @@ export const ReceivedQuotationTable: FC = () => {
             'quotationsTable',
             1,
             0,
-            selectedTemplate.length,
+            selectedTemplate.length === 0 ? 1 : selectedTemplate.length,
             7,
             GC.Spread.Sheets.Tables.TableThemes.light1
         );
