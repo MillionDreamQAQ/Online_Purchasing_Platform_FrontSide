@@ -52,7 +52,7 @@ export const changColumnChartDataLabels = chart => {
 export const changeChartSeriesColor = chart => {
     const series = chart.series().get();
     for (let i = 0; i < series.length; i++) {
-        chart.series().set(i, { backColor: colorArray[i] });
+        chart.series().set(i, { backColor: colorArray[i % 4] });
     }
 };
 
@@ -63,10 +63,11 @@ export const changeChartSeriesGapWidthAndOverLap = chart => {
     chart.series().set(0, seriesItem);
 };
 
-export const changeSeries = (chart, length) => {
-    for (let i = 0; i < length; i++) {
+export const changeSeries = (chart, itemLength, supplierLength) => {
+    for (let i = 0; i < supplierLength; i++) {
         const series = chart.series().get(i);
-        series.xValues = `Sheet1!$A$4:$A${4 + length}`;
+        series.xValues = `Sheet1!$A$4:$A$${4 + itemLength}`;
+
         chart.series().set(i, series);
     }
 };
