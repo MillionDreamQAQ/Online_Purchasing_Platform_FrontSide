@@ -13,27 +13,33 @@ interface IConfigInputsProps {
 export const ConfigItems: FC<IConfigInputsProps> = ({ index, value, onChange, onRemove }) => {
     const [name, setName] = useState(value.name);
     const [size, setSize] = useState(value.size);
+    const [count, setCount] = useState(value.count);
     const [unit, setUnit] = useState(value.unit);
     const [desc, setDesc] = useState(value.desc);
 
     const handleNameChange = e => {
         setName(e.target.value);
-        onChange({ key: '', count: 0, price: 0, name: e.target.value, size, unit, desc });
+        onChange({ key: '', count, price: 0, name: e.target.value, size, unit, desc });
     };
 
     const handleSizeChange = e => {
         setSize(e.target.value);
-        onChange({ key: '', count: 0, price: 0, name, size: e.target.value, unit, desc });
+        onChange({ key: '', count, price: 0, name, size: e.target.value, unit, desc });
     };
 
     const handleUnitChange = e => {
         setUnit(e.target.value);
-        onChange({ key: '', count: 0, price: 0, name, size, unit: e.target.value, desc });
+        onChange({ key: '', count, price: 0, name, size, unit: e.target.value, desc });
+    };
+
+    const handleCountChange = e => {
+        setCount(e.target.value);
+        onChange({ key: '', count: e.target.value, price: 0, name, size, unit, desc });
     };
 
     const handleDescriptionChange = e => {
         setDesc(e.target.value);
-        onChange({ key: '', count: 0, price: 0, name, size, unit, desc: e.target.value });
+        onChange({ key: '', count, price: 0, name, size, unit, desc: e.target.value });
     };
 
     const handleRemoveClick = () => {
@@ -70,7 +76,14 @@ export const ConfigItems: FC<IConfigInputsProps> = ({ index, value, onChange, on
                 onChange={handleSizeChange}
             />
             <Input
-                style={{ width: '30%' }}
+                style={{ width: '14%' }}
+                className={scssStyles.templateInput}
+                placeholder='数量'
+                value={value.count}
+                onChange={handleCountChange}
+            />
+            <Input
+                style={{ width: '14%' }}
                 placeholder='单位'
                 value={value.unit}
                 onChange={handleUnitChange}

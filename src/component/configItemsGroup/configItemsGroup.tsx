@@ -1,24 +1,27 @@
 import { FC, useState } from 'react';
 import { Button } from 'antd';
-import { ConfigItems, ConfigValue } from '../configItem/configItem';
+import { ConfigItems } from '../configItem/configItem';
+import { ITemplate } from '@/request/model';
 
 interface IConfigItemsGroupProps {
-    onChange: (config: ConfigValue[]) => void;
+    onChange: (config: ITemplate[]) => void;
 }
 
 export const ConfigItemsGroup: FC<IConfigItemsGroupProps> = ({ onChange }) => {
     const [itemCount, setItemCount] = useState(1);
-    const [values, setValues] = useState<ConfigValue[]>(
+    const [values, setValues] = useState<ITemplate[]>(
         Array(itemCount).fill({
             key: '',
             name: '',
             size: '',
+            count: 1,
             unit: '',
-            desc: ''
+            desc: '',
+            price: 0
         })
     );
 
-    const onInputChange = (index: number, newValue: ConfigValue) => {
+    const onInputChange = (index: number, newValue: ITemplate) => {
         const newValues = [...values];
         newValues[index] = newValue;
         setValues(newValues);
@@ -33,8 +36,10 @@ export const ConfigItemsGroup: FC<IConfigItemsGroupProps> = ({ onChange }) => {
                 key: '',
                 name: '',
                 size: '',
+                count: 1,
                 unit: '',
-                desc: ''
+                desc: '',
+                price: 0
             }
         ]);
         setItemCount(itemCount + 1);

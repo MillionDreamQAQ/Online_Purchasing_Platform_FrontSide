@@ -35,6 +35,10 @@ const templateTableColumns: ColumnsType<ITemplate> = [
         dataIndex: 'size'
     },
     {
+        title: '数量',
+        dataIndex: 'count'
+    },
+    {
         title: '单位',
         dataIndex: 'unit'
     },
