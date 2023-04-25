@@ -102,3 +102,20 @@ export async function finishedQuotation(username: string, quotation: IQuotation)
         return null;
     }
 }
+
+export async function deleteFinishedQuotation(quotationKey: string) {
+    try {
+        const response = await fetch(`${preUrl}/q/deleteFinished`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ quotationKey }),
+            credentials: 'include'
+        });
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        return null;
+    }
+}

@@ -1,5 +1,5 @@
 import { FC, SetStateAction, useEffect, useState } from 'react';
-import { Button, Drawer, Input, Space, Table, message } from 'antd';
+import { Button, Drawer, Input, Space, Table, Tag, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import * as GC from '@grapecity/spread-sheets';
 import '@grapecity/spread-sheets-print';
@@ -10,8 +10,7 @@ import '@grapecity/spread-sheets-tablesheet';
 import '@grapecity/spread-sheets-io';
 import '@grapecity/spread-sheets-resources-zh';
 import '@grapecity/spread-sheets-designer-resources-cn';
-import * as GCD from '@grapecity/spread-sheets-designer';
-import { Designer } from '@grapecity/spread-sheets-designer-react';
+import { SpreadSheets } from '@grapecity/spread-sheets-react';
 import scssStyles from './quotationTable.scss';
 import {
     addQuotation,
@@ -69,8 +68,6 @@ export const QuotationTable: FC = () => {
 
     const [configValue, setConfigValue] = useState<ITemplate[]>([]);
 
-    let designer: GCD.Spread.Sheets.Designer.Designer;
-
     useEffect(() => {
         async function fetchData() {
             await refreshQuotations();
@@ -95,12 +92,13 @@ export const QuotationTable: FC = () => {
             });
         } else {
             const quotations = res.result.quotations.map(
-                ({ _id, quotationName, template, key, selectedTemplate }) => ({
+                ({ _id, quotationName, template, key, selectedTemplate, publishedLocked }) => ({
                     id: _id,
                     key,
                     quotationName,
                     template,
-                    selectedTemplate
+                    selectedTemplate,
+                    publishedLocked
                 })
             );
 
@@ -124,6 +122,17 @@ export const QuotationTable: FC = () => {
             dataIndex: 'quotationName',
             key: 'quotationName',
             render: name => <a>{name}</a>
+        },
+        {
+            title: '状态',
+            dataIndex: 'publishedLocked',
+            key: 'publishedLocked',
+            render: publishedLocked => {
+                if (publishedLocked) {
+                    return <Tag color='green'>已发布</Tag>;
+                }
+                return <Tag color='red'>未发布</Tag>;
+            }
         },
         {
             title: '操作',
@@ -451,27 +460,25 @@ export const QuotationTable: FC = () => {
                 </Button>
 
                 <div className={scssStyles.quotationEditor}>
-                    <Designer
-                        styleInfo={{ width: '100%', height: '78vh' }}
-                        config={GCD.Spread.Sheets.Designer.DefaultConfig}
-                        spreadOptions={{ sheetCount: 1 }}
-                        designerInitialized={initDesigner}
-                    ></Designer>
+                    <SpreadSheets
+                        workbookInitialized={spread => {
+                            initSpread(spread);
+                        }}
+                    ></SpreadSheets>
                 </div>
             </div>
         );
     };
 
-    const initDesigner = (designerEntity: GCD.Spread.Sheets.Designer.Designer) => {
-        designer = designerEntity;
-
-        const spread = designer.getWorkbook() as GC.Spread.Sheets.Workbook;
+    const initSpread = (spread: GC.Spread.Sheets.Workbook) => {
         const sheet: GC.Spread.Sheets.Worksheet = spread.getActiveSheet();
 
-        renderDataToDesigner(sheet);
+        spread.options.tabStripVisible = false;
+
+        renderDataToSpread(sheet);
     };
 
-    const renderDataToDesigner = (sheet: GC.Spread.Sheets.Worksheet) => {
+    const renderDataToSpread = (sheet: GC.Spread.Sheets.Worksheet) => {
         sheet.suspendPaint();
 
         const data = quotationData[editSelectIndex];
@@ -538,6 +545,7 @@ export const QuotationTable: FC = () => {
         const all = sheet.getRange(0, 0, 2 + (selectedTemplate ? selectedTemplate.length : 0), 7);
         all.hAlign(GC.Spread.Sheets.HorizontalAlign.center);
         all.vAlign(GC.Spread.Sheets.VerticalAlign.center);
+
 
         sheet.resumePaint();
     };

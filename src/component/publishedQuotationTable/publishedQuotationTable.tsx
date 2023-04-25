@@ -25,6 +25,7 @@ import {
     changeChartTitle,
     changeSeries
 } from '@/utils/chart';
+import { deleteFinishedQuotation } from '@/request/quotationRequest';
 
 interface IGroupQuotation {
     groupQuotation: IGroupQuotationItem[];
@@ -126,10 +127,36 @@ export const PublishedQuotationTable: FC = () => {
                     >
                         报价分析
                     </Button>
-                    {/* <Button type='primary'>对比报价</Button>
-                    <Button type='primary' danger>
+                    <Button
+                        type='primary'
+                        danger
+                        onClick={async () => {
+                            const deleteRes = await deleteFinishedQuotation(
+                                record.quotations[0].quotation.key
+                            );
+
+                            if (deleteRes.code === 200) {
+                                message.success({
+                                    content: '关闭报价成功',
+                                    duration: 1,
+                                    style: {
+                                        marginTop: '50px'
+                                    }
+                                });
+                                await refreshQuotations();
+                            } else {
+                                message.error({
+                                    content: deleteRes.msg,
+                                    duration: 1,
+                                    style: {
+                                        marginTop: '50px'
+                                    }
+                                });
+                            }
+                        }}
+                    >
                         关闭报价
-                    </Button> */}
+                    </Button>
                 </Space>
             )
         }

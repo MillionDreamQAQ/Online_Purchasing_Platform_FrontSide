@@ -1,4 +1,4 @@
-import { Button, Space, Table, message } from 'antd';
+import { Button, Space, Table, Tag, message } from 'antd';
 import { FC, useEffect, useState } from 'react';
 import * as GC from '@grapecity/spread-sheets';
 import '@grapecity/spread-sheets-print';
@@ -12,6 +12,7 @@ import '@grapecity/spread-sheets-designer-resources-cn';
 import * as GCD from '@grapecity/spread-sheets-designer';
 import { Designer } from '@grapecity/spread-sheets-designer-react';
 import { ColumnsType } from 'antd/es/table';
+import { render } from 'react-dom';
 import { findUserById } from '@/request/userRequest';
 import { IReceivedQuotation } from '@/request/model';
 import scssStyles from './receivedQuotationTable.scss';
@@ -49,12 +50,13 @@ export const ReceivedQuotationTable: FC = () => {
             });
         } else {
             const quotations = res.result.receivedQuotations.map(
-                ({ _id, key, publisher, receiver, quotation }) => ({
+                ({ _id, key, publisher, receiver, quotation, finishedLocked }) => ({
                     id: _id,
                     key,
                     publisher,
                     receiver,
-                    quotation
+                    quotation,
+                    finishedLocked
                 })
             );
 
@@ -68,6 +70,17 @@ export const ReceivedQuotationTable: FC = () => {
             dataIndex: ['quotation', 'quotationName'],
             key: 'quotationName',
             render: name => <a>{name}</a>
+        },
+        {
+            title: '状态',
+            dataIndex: ['finishedLocked'],
+            key: 'finishedLocked',
+            render: finishedLocked => {
+                if (finishedLocked) {
+                    return <Tag color='green'>已完成</Tag>;
+                }
+                return <Tag color='red'>未完成</Tag>;
+            }
         },
         {
             title: '发布者',
@@ -146,6 +159,8 @@ export const ReceivedQuotationTable: FC = () => {
                 }
             });
         }
+
+        setContentShownIndex(1);
     };
 
     const renderReceivedQuotationTable = () => {
@@ -166,8 +181,7 @@ export const ReceivedQuotationTable: FC = () => {
                     onClick={() => {
                         setContentShownIndex(1);
                     }}
-                    type='primary'
-                    danger
+                    type='default'
                 >
                     返回
                 </Button>
@@ -179,6 +193,38 @@ export const ReceivedQuotationTable: FC = () => {
                     type='primary'
                 >
                     完成报价
+                </Button>
+                <Button
+                    className={scssStyles.button}
+                    onClick={async () => {
+                        const deleteRes = await deleteReceivedQuotation(
+                            receivedQuotationData[editSelectIndex].id
+                        );
+
+                        if (deleteRes.code === 200) {
+                            message.success({
+                                content: deleteRes.msg,
+                                duration: 1,
+                                style: {
+                                    marginTop: '50px'
+                                }
+                            });
+                            await refreshQuotations();
+                        } else {
+                            message.error({
+                                content: deleteRes.msg,
+                                duration: 1,
+                                style: {
+                                    marginTop: '50px'
+                                }
+                            });
+                        }
+                        setContentShownIndex(1);
+                    }}
+                    type='primary'
+                    danger
+                >
+                    拒绝报价
                 </Button>
                 <div className={scssStyles.quotationEditor}>
                     <Designer
