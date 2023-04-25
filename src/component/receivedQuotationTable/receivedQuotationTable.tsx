@@ -226,15 +226,26 @@ export const ReceivedQuotationTable: FC = () => {
             GC.Spread.Sheets.Tables.TableThemes.light1
         );
 
+        // when selectedTemplate is empty, add a empty row
+        if (selectedTemplate.length === 0) {
+            selectedTemplate.push({
+                key: '',
+                name: '',
+                size: '',
+                count: 1,
+                price: 0,
+                unit: '',
+                desc: ''
+            });
+        }
+
         const tableColumn1 = new GC.Spread.Sheets.Tables.TableColumn(0, 'name', '名称');
         const tableColumn2 = new GC.Spread.Sheets.Tables.TableColumn(1, 'size', '规格');
         const tableColumn3 = new GC.Spread.Sheets.Tables.TableColumn(2, 'count', '数量');
         const tableColumn4 = new GC.Spread.Sheets.Tables.TableColumn(3, 'price', '单价');
         const tableColumn5 = new GC.Spread.Sheets.Tables.TableColumn(4, 'unit', '单位');
         const tableColumn6 = new GC.Spread.Sheets.Tables.TableColumn(5, 'desc', '报价清单');
-        const tableColumn7 = new GC.Spread.Sheets.Tables.TableColumn(6, '', '小计');
-
-        table.setColumnDataFormula(6, '=[@数量]*[@单价]');
+        const tableColumn7 = new GC.Spread.Sheets.Tables.TableColumn(6, 'total', '小计');
 
         table.bindColumns([
             tableColumn1,
@@ -249,6 +260,10 @@ export const ReceivedQuotationTable: FC = () => {
         table.autoGenerateColumns(false);
 
         table.bindingPath('selectedTemplate');
+
+        table.showFooter(true);
+        table.setColumnDataFormula(6, '=[@数量]*[@单价]');
+        table.setColumnFormula(6, '=SUBTOTAL(109,[小计])');
 
         sheet.setColumnWidth(0, 100);
         sheet.setColumnWidth(1, 100);
@@ -273,21 +288,6 @@ export const ReceivedQuotationTable: FC = () => {
         const all = sheet.getRange(0, 0, 3 + (selectedTemplate ? selectedTemplate.length : 0), 7);
         all.hAlign(GC.Spread.Sheets.HorizontalAlign.center);
         all.vAlign(GC.Spread.Sheets.VerticalAlign.center);
-
-        sheet
-            .getCell(selectedTemplate.length + 2, 0, GC.Spread.Sheets.SheetArea.viewport)
-            .font('bold 16px 微软雅黑')
-            .text('合计');
-
-        sheet
-            .getRange(selectedTemplate.length + 2, 6, 1, 1)
-            .formula(`SUM(G3:G${selectedTemplate.length + 2})`);
-
-        sheet
-            .getRange(selectedTemplate.length + 2, 0, 1, 7)
-            .borderBottom(
-                new GC.Spread.Sheets.LineBorder('black', GC.Spread.Sheets.LineStyle.thin)
-            );
 
         sheet.setRowHeight(selectedTemplate.length + 2, 40);
         sheet.addSpan(selectedTemplate.length + 2, 0, 1, 6, GC.Spread.Sheets.SheetArea.viewport);

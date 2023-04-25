@@ -213,8 +213,6 @@ export const QuotationTable: FC = () => {
     const userRowSelection = {
         onChange: (selectedRowKeys: React.Key[], selectedRows: any[]) => {
             setSelectUser([...selectedRows]);
-
-            console.log(selectedRows);
         }
     };
 

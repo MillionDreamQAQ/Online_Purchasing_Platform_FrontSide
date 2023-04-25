@@ -253,7 +253,7 @@ export const PublishedQuotationTable: FC = () => {
 
             const compareTableColumn = new GC.Spread.Sheets.Tables.TableColumn(
                 0,
-                'price',
+                'total',
                 data.quotations[j].publisher.username
             );
 
