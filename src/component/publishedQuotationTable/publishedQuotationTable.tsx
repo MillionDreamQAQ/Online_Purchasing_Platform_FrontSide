@@ -10,7 +10,7 @@ import '@grapecity/spread-sheets-io';
 import '@grapecity/spread-sheets-resources-zh';
 import '@grapecity/spread-sheets-designer-resources-cn';
 import * as GCD from '@grapecity/spread-sheets-designer';
-import { Designer } from '@grapecity/spread-sheets-designer-react';
+import { SpreadSheets } from '@grapecity/spread-sheets-react';
 import { ColumnsType } from 'antd/es/table';
 import { findUserById } from '@/request/userRequest';
 import { IFinishedQuotation } from '@/request/model';
@@ -186,27 +186,25 @@ export const PublishedQuotationTable: FC = () => {
                 </Button>
 
                 <div className={scssStyles.quotationEditor}>
-                    <Designer
-                        styleInfo={{ width: '100%', height: '78vh' }}
-                        config={GCD.Spread.Sheets.Designer.DefaultConfig}
-                        spreadOptions={{ sheetCount: 1 }}
-                        designerInitialized={initDesigner}
-                    ></Designer>
+                    <SpreadSheets
+                        workbookInitialized={spread => {
+                            initSpread(spread);
+                        }}
+                    ></SpreadSheets>
                 </div>
             </div>
         );
     };
 
-    const initDesigner = (designerEntity: GCD.Spread.Sheets.Designer.Designer) => {
-        designer = designerEntity;
-
-        const spread = designer.getWorkbook() as GC.Spread.Sheets.Workbook;
+    const initSpread = (spread: GC.Spread.Sheets.Workbook) => {
         const sheet: GC.Spread.Sheets.Worksheet = spread.getActiveSheet();
 
-        renderDataToDesigner(sheet);
+        spread.options.tabStripVisible = false;
+
+        renderSpread(sheet);
     };
 
-    const renderDataToDesigner = (sheet: GC.Spread.Sheets.Worksheet) => {
+    const renderSpread = (sheet: GC.Spread.Sheets.Worksheet) => {
         sheet.suspendPaint();
 
         const data = groupPublishedQuotation[editSelectIndex];
@@ -432,6 +430,8 @@ export const PublishedQuotationTable: FC = () => {
             );
             chartArray[p].changeStyle(chart, selectedTemplate.length, data.quotations.length);
         }
+
+        sheet.options.isProtected = true;
 
         sheet.resumePaint();
     };

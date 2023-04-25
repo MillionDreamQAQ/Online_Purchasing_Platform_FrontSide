@@ -270,6 +270,8 @@ export const QuotationTable: FC = () => {
                         marginTop: '50px'
                     }
                 });
+
+                setAddQuotationDrawerVisible(false);
             } else {
                 message.error({
                     content: addResponse.msg,
@@ -298,6 +300,8 @@ export const QuotationTable: FC = () => {
                     marginTop: '50px'
                 }
             });
+
+            setTemplateSettingDrawerVisible(false);
         } else {
             message.error({
                 content: res.msg,
@@ -475,10 +479,10 @@ export const QuotationTable: FC = () => {
 
         spread.options.tabStripVisible = false;
 
-        renderDataToSpread(sheet);
+        renderSpread(sheet);
     };
 
-    const renderDataToSpread = (sheet: GC.Spread.Sheets.Worksheet) => {
+    const renderSpread = (sheet: GC.Spread.Sheets.Worksheet) => {
         sheet.suspendPaint();
 
         const data = quotationData[editSelectIndex];
@@ -546,6 +550,7 @@ export const QuotationTable: FC = () => {
         all.hAlign(GC.Spread.Sheets.HorizontalAlign.center);
         all.vAlign(GC.Spread.Sheets.VerticalAlign.center);
 
+        sheet.options.isProtected = true;
 
         sheet.resumePaint();
     };
