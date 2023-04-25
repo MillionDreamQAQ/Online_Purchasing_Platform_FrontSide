@@ -13,7 +13,7 @@ export async function loginUser(username: string, password: string) {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error logging in user:', error);
+        return null;
     }
 }
 
@@ -29,7 +29,7 @@ export async function registerUser(username: string, password: string) {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error registering user:', error);
+        return null;
     }
 }
 
@@ -41,7 +41,7 @@ export async function findUserById() {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error finding user by id:', error);
+        return null;
     }
 }
 
@@ -53,7 +53,7 @@ export async function logout() {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error finding user by id:', error);
+        return null;
     }
 }
 
@@ -65,6 +65,6 @@ export async function getAllUserWithoutMe() {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error finding user by id:', error);
+        return null;
     }
 }

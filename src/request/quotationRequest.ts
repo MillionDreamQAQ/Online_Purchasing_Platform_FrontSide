@@ -15,7 +15,7 @@ export async function addQuotation(quotation: IQuotation) {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error fetching data:', error);
+        return null;
     }
 }
 
@@ -31,7 +31,7 @@ export async function templateSelect(quotationId: string, selectedTemplateKey: s
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error fetching data:', error);
+        return null;
     }
 }
 
@@ -48,7 +48,7 @@ export async function deleteQuotation(quotationId: string) {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error fetching data:', error);
+        return null;
     }
 }
 
@@ -65,7 +65,7 @@ export async function publishQuotation(quotationId: string, targetUsersId: strin
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error fetching data:', error);
+        return null;
     }
 }
 
@@ -82,7 +82,7 @@ export async function deleteReceivedQuotation(receivedQuotationId: string) {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error fetching data:', error);
+        return null;
     }
 }
 
@@ -99,6 +99,6 @@ export async function finishedQuotation(username: string, quotation: IQuotation)
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error fetching data:', error);
+        return null;
     }
 }

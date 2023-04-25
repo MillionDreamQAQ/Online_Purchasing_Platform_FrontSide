@@ -60,7 +60,7 @@ export const ConfigItemsGroup: FC<IConfigItemsGroupProps> = ({ onChange }) => {
     const renderItems = () => {
         return values.map((value, index) => (
             <ConfigItems
-                key={index}
+                key={value.key}
                 index={index + 1}
                 value={value}
                 onChange={newValue => {
