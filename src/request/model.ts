@@ -11,6 +11,7 @@ export interface ITemplate {
 export interface IReceivedQuotation {
     id: string;
     key: string;
+    finishedLocked: boolean;
     receiver: IUser;
     publisher: IUser;
     quotation: IQuotation;

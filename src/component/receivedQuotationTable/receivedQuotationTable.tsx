@@ -95,6 +95,16 @@ export const ReceivedQuotationTable: FC = () => {
                     <Button
                         type='primary'
                         onClick={() => {
+                            if (record.finishedLocked) {
+                                message.error({
+                                    content: '该报价单已完成，无法再次编辑',
+                                    duration: 1,
+                                    style: {
+                                        marginTop: '50px'
+                                    }
+                                });
+                                return;
+                            }
                             setContentShownIndex(2);
                             setEditSelectIndex(index);
                         }}
