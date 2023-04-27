@@ -159,7 +159,8 @@ export const QuotationTable: FC = () => {
                     </Button>
                     <Button
                         type='primary'
-                        onClick={() => {
+                        onClick={async () => {
+                            await refreshQuotations();
                             setPublishQuotationDrawerVisible(true);
                             setPublishQuotationIndex(index);
                         }}

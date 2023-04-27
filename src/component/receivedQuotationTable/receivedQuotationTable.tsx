@@ -12,7 +12,6 @@ import '@grapecity/spread-sheets-designer-resources-cn';
 import * as GCD from '@grapecity/spread-sheets-designer';
 import { Designer } from '@grapecity/spread-sheets-designer-react';
 import { ColumnsType } from 'antd/es/table';
-import { render } from 'react-dom';
 import { findUserById } from '@/request/userRequest';
 import { IReceivedQuotation } from '@/request/model';
 import scssStyles from './receivedQuotationTable.scss';
@@ -171,6 +170,7 @@ export const ReceivedQuotationTable: FC = () => {
         }
 
         setContentShownIndex(1);
+        await refreshQuotations();
     };
 
     const renderReceivedQuotationTable = () => {
