@@ -7,9 +7,9 @@ import '@grapecity/spread-sheets-slicers';
 import '@grapecity/spread-sheets-pivot-addon';
 import '@grapecity/spread-sheets-tablesheet';
 import '@grapecity/spread-sheets-io';
+import '@grapecity/spread-sheets-charts';
 import '@grapecity/spread-sheets-resources-zh';
 import '@grapecity/spread-sheets-designer-resources-cn';
-import * as GCD from '@grapecity/spread-sheets-designer';
 import { SpreadSheets } from '@grapecity/spread-sheets-react';
 import { ColumnsType } from 'antd/es/table';
 import { findUserById } from '@/request/userRequest';
@@ -43,8 +43,6 @@ export const PublishedQuotationTable: FC = () => {
     const [editSelectIndex, setEditSelectIndex] = useState(-1);
 
     const [contentShownIndex, setContentShownIndex] = useState(1);
-
-    let designer: GCD.Spread.Sheets.Designer.Designer;
 
     useEffect(() => {
         async function fetchData() {
@@ -264,7 +262,7 @@ export const PublishedQuotationTable: FC = () => {
         }
 
         // render compare table
-        const cfs = sheet.conditionalFormats;
+        const { conditionalFormats } = sheet;
 
         for (let j = 0; j < data.quotations.length; j++) {
             const compareTable = sheet.tables.add(
@@ -288,7 +286,7 @@ export const PublishedQuotationTable: FC = () => {
         }
 
         for (let k = 0; k < selectedTemplate.length; k++) {
-            cfs.add2ScaleRule(
+            conditionalFormats.add2ScaleRule(
                 GC.Spread.Sheets.ConditionalFormatting.ScaleValueType.lowestValue,
                 0,
                 'green',
@@ -322,7 +320,7 @@ export const PublishedQuotationTable: FC = () => {
                 );
         }
 
-        cfs.add2ScaleRule(
+        conditionalFormats.add2ScaleRule(
             GC.Spread.Sheets.ConditionalFormatting.ScaleValueType.lowestValue,
             0,
             'green',

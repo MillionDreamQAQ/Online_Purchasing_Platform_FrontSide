@@ -9,8 +9,7 @@ import '@grapecity/spread-sheets-tablesheet';
 import '@grapecity/spread-sheets-io';
 import '@grapecity/spread-sheets-resources-zh';
 import '@grapecity/spread-sheets-designer-resources-cn';
-import * as GCD from '@grapecity/spread-sheets-designer';
-import { Designer } from '@grapecity/spread-sheets-designer-react';
+import { SpreadSheets } from '@grapecity/spread-sheets-react';
 import { ColumnsType } from 'antd/es/table';
 import { findUserById } from '@/request/userRequest';
 import { IReceivedQuotation } from '@/request/model';
@@ -23,8 +22,6 @@ export const ReceivedQuotationTable: FC = () => {
     const [editSelectIndex, setEditSelectIndex] = useState(-1);
 
     const [contentShownIndex, setContentShownIndex] = useState(1);
-
-    let designer: GCD.Spread.Sheets.Designer.Designer;
 
     useEffect(() => {
         async function fetchData() {
@@ -237,27 +234,27 @@ export const ReceivedQuotationTable: FC = () => {
                     拒绝报价
                 </Button>
                 <div className={scssStyles.quotationEditor}>
-                    <Designer
-                        styleInfo={{ width: '100%', height: '78vh' }}
-                        config={GCD.Spread.Sheets.Designer.DefaultConfig}
-                        spreadOptions={{ sheetCount: 1 }}
-                        designerInitialized={initDesigner}
-                    ></Designer>
+                    <SpreadSheets
+                        workbookInitialized={spread => {
+                            initSpread(spread);
+                        }}
+                    ></SpreadSheets>
                 </div>
             </div>
         );
     };
 
-    const initDesigner = (designerEntity: GCD.Spread.Sheets.Designer.Designer) => {
-        designer = designerEntity;
-
-        const spread = designer.getWorkbook() as GC.Spread.Sheets.Workbook;
+    const initSpread = (spread: GC.Spread.Sheets.Workbook) => {
         const sheet: GC.Spread.Sheets.Worksheet = spread.getActiveSheet();
 
-        renderDataToDesigner(sheet);
+        spread.options.tabStripVisible = false;
+
+        renderSpread(sheet);
     };
 
-    const renderDataToDesigner = (sheet: GC.Spread.Sheets.Worksheet) => {
+    const renderSpread = (sheet: GC.Spread.Sheets.Worksheet) => {
+        sheet.options.isProtected = true;
+
         sheet.suspendPaint();
 
         const data = receivedQuotationData[editSelectIndex].quotation;
@@ -282,19 +279,6 @@ export const ReceivedQuotationTable: FC = () => {
             GC.Spread.Sheets.Tables.TableThemes.light1
         );
 
-        // when selectedTemplate is empty, add a empty row
-        if (selectedTemplate.length === 0) {
-            selectedTemplate.push({
-                key: '',
-                name: '',
-                size: '',
-                count: 1,
-                price: 0,
-                unit: '',
-                desc: ''
-            });
-        }
-
         const tableColumn1 = new GC.Spread.Sheets.Tables.TableColumn(0, 'name', '名称');
         const tableColumn2 = new GC.Spread.Sheets.Tables.TableColumn(1, 'size', '规格');
         const tableColumn3 = new GC.Spread.Sheets.Tables.TableColumn(2, 'count', '数量');
@@ -318,8 +302,18 @@ export const ReceivedQuotationTable: FC = () => {
         table.bindingPath('selectedTemplate');
 
         table.showFooter(true);
+        table.setColumnValue(0, '总计');
         table.setColumnDataFormula(6, '=[@数量]*[@单价]');
         table.setColumnFormula(6, '=SUBTOTAL(109,[小计])');
+
+        const editableRange = sheet.getRange(2, 3, selectedTemplate.length, 1);
+        editableRange.locked(false);
+        editableRange.setBorder(
+            new GC.Spread.Sheets.LineBorder('yellow', GC.Spread.Sheets.LineStyle.thin),
+            {
+                all: true
+            }
+        );
 
         sheet.setColumnWidth(0, 100);
         sheet.setColumnWidth(1, 100);

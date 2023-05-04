@@ -1,5 +1,6 @@
 import { IQuotation } from './model';
 
+// const preUrl = 'http://xa-dd3-joestar1:3000';
 const preUrl = 'http://localhost:3000';
 
 export async function addQuotation(quotation: IQuotation) {

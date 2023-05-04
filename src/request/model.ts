@@ -29,6 +29,7 @@ export interface IQuotation {
     id: string;
     key: string;
     quotationName: string;
+    publishedLocked: boolean;
     template: ITemplate[];
     selectedTemplate: ITemplate[];
 }

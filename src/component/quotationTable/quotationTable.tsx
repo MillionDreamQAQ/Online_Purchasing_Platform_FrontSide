@@ -160,6 +160,16 @@ export const QuotationTable: FC = () => {
                     <Button
                         type='primary'
                         onClick={async () => {
+                            if (quotationData[index].publishedLocked) {
+                                message.error({
+                                    content: '该报价单已发布',
+                                    duration: 1,
+                                    style: {
+                                        marginTop: '50px'
+                                    }
+                                });
+                                return;
+                            }
                             await refreshQuotations();
                             setPublishQuotationDrawerVisible(true);
                             setPublishQuotationIndex(index);
@@ -258,7 +268,8 @@ export const QuotationTable: FC = () => {
                 key: '',
                 quotationName: addQuotationName,
                 template: configValue,
-                selectedTemplate: []
+                selectedTemplate: [],
+                publishedLocked: false
             });
 
             if (addResponse.code === 200) {
@@ -354,6 +365,8 @@ export const QuotationTable: FC = () => {
             }
 
             setPublishQuotationDrawerVisible(false);
+
+            await refreshQuotations();
         }
     };
 
