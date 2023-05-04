@@ -11,6 +11,7 @@ interface IConfigInputsProps {
 }
 
 export const ConfigItems: FC<IConfigInputsProps> = ({ index, value, onChange, onRemove }) => {
+    const [key] = useState(value.key);
     const [name, setName] = useState(value.name);
     const [size, setSize] = useState(value.size);
     const [count, setCount] = useState(value.count);
@@ -19,27 +20,27 @@ export const ConfigItems: FC<IConfigInputsProps> = ({ index, value, onChange, on
 
     const handleNameChange = e => {
         setName(e.target.value);
-        onChange({ key: '', count, price: 0, name: e.target.value, size, unit, desc });
+        onChange({ key, count, price: 0, name: e.target.value, size, unit, desc });
     };
 
     const handleSizeChange = e => {
         setSize(e.target.value);
-        onChange({ key: '', count, price: 0, name, size: e.target.value, unit, desc });
+        onChange({ key, count, price: 0, name, size: e.target.value, unit, desc });
     };
 
     const handleUnitChange = e => {
         setUnit(e.target.value);
-        onChange({ key: '', count, price: 0, name, size, unit: e.target.value, desc });
+        onChange({ key, count, price: 0, name, size, unit: e.target.value, desc });
     };
 
     const handleCountChange = e => {
         setCount(e.target.value);
-        onChange({ key: '', count: e.target.value, price: 0, name, size, unit, desc });
+        onChange({ key, count: e.target.value, price: 0, name, size, unit, desc });
     };
 
     const handleDescriptionChange = e => {
         setDesc(e.target.value);
-        onChange({ key: '', count, price: 0, name, size, unit, desc: e.target.value });
+        onChange({ key, count, price: 0, name, size, unit, desc: e.target.value });
     };
 
     const handleRemoveClick = () => {

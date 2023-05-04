@@ -1,4 +1,4 @@
-import { FC, SetStateAction, useEffect, useState } from 'react';
+import { FC, SetStateAction, useEffect, useRef, useState } from 'react';
 import { Button, Drawer, Input, Space, Table, Tag, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import * as GC from '@grapecity/spread-sheets';
@@ -68,6 +68,8 @@ export const QuotationTable: FC = () => {
 
     const [configValue, setConfigValue] = useState<ITemplate[]>([]);
 
+    const configValueGroupRef = useRef(null);
+
     useEffect(() => {
         async function fetchData() {
             await refreshQuotations();
@@ -110,6 +112,13 @@ export const QuotationTable: FC = () => {
         const res = await getAllUserWithoutMe();
 
         setUserData(res.users.map(({ _id, username }) => ({ id: _id, username })));
+    };
+
+    const clearConfigValues = () => {
+        if (configValueGroupRef.current) {
+            const current = configValueGroupRef.current as any;
+            current.resetValues();
+        }
     };
 
     const handleQuotationInputChange = (e: { target: { value: SetStateAction<string> } }) => {
@@ -250,6 +259,17 @@ export const QuotationTable: FC = () => {
                 }
             });
         } else {
+            if (configValue.length === 0) {
+                message.error({
+                    content: '请添加至少一个配置项',
+                    duration: 1,
+                    style: {
+                        marginTop: '50px'
+                    }
+                });
+                return;
+            }
+
             for (const config of configValue) {
                 if (config.name === '') {
                     message.error({
@@ -282,6 +302,8 @@ export const QuotationTable: FC = () => {
                         marginTop: '50px'
                     }
                 });
+
+                clearConfigValues();
 
                 setAddQuotationDrawerVisible(false);
             } else {
@@ -389,7 +411,6 @@ export const QuotationTable: FC = () => {
                     dataSource={quotationData}
                 />
 
-                {/* Template Drawer */}
                 <Drawer
                     className={scssStyles.rightDrawer}
                     size='large'
@@ -413,11 +434,11 @@ export const QuotationTable: FC = () => {
                     </div>
                 </Drawer>
 
-                {/* Add Quotation Drawer */}
                 <Drawer
                     className={scssStyles.rightDrawer}
                     size='large'
                     placement='right'
+                    width='800px'
                     onClose={setAddQuotationDrawerVisible.bind(this, false)}
                     open={addQuotationDrawerVisible}
                 >
@@ -429,14 +450,16 @@ export const QuotationTable: FC = () => {
                             onChange={handleQuotationInputChange}
                             placeholder='输入报价单名称'
                         />
-                        <ConfigItemsGroup onChange={handleQuotationItemsInputChange} />
+                        <ConfigItemsGroup
+                            ref={configValueGroupRef}
+                            onChange={handleQuotationItemsInputChange}
+                        />
                         <Button type='primary' onClick={addQuotationButtonHandler}>
                             添加报价单
                         </Button>
                     </div>
                 </Drawer>
 
-                {/* Publish Quotation */}
                 <Drawer
                     className={scssStyles.rightDrawer}
                     size='default'
