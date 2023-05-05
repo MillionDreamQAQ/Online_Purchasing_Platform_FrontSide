@@ -361,7 +361,12 @@ export const PublishedQuotationTable: FC = () => {
             .hAlign(GC.Spread.Sheets.HorizontalAlign.center);
 
         // set all style
-        const all = sheet.getRange(0, 0, 4 + (selectedTemplate ? selectedTemplate.length : 0), 7);
+        const all = sheet.getRange(
+            0,
+            0,
+            4 + (selectedTemplate ? selectedTemplate.length : 0),
+            5 + data.quotations.length
+        );
         all.hAlign(GC.Spread.Sheets.HorizontalAlign.center);
         all.vAlign(GC.Spread.Sheets.VerticalAlign.center);
 
